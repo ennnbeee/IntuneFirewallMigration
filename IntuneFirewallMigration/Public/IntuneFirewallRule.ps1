@@ -137,19 +137,18 @@ function ConvertTo-IntuneFirewallRuleString {
         $(if ($firewallObject.description) { $firewallObject.description | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.trafficDirection) { $firewallObject.trafficDirection | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.action) { $firewallObject.action | ConvertTo-Json }else { "`"notConfigured`"" }),
-       (format-ArrString $firewallObject.profileTypes),
+        (format-ArrString $firewallObject.profileTypes),
         $(if ($firewallObject.packageFamilyName) { $firewallObject.packageFamilyName | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.filePath) { $firewallObject.filePath | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.serviceName) { $firewallObject.serviceName | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.protocol) { $firewallObject.protocol }else { 'null' }),
-       (format-ArrString $firewallObject.localPortRanges),
-       (format-ArrString $firewallObject.remotePortRanges),
-       (format-ArrString $firewallObject.interfaceTypes),
+        (format-ArrString $firewallObject.localPortRanges),
+        (format-ArrString $firewallObject.remotePortRanges),
+        (format-ArrString $firewallObject.interfaceTypes),
         $(if ($firewallObject.localUserAuthorizations) { $firewallObject.localUserAuthorizations | ConvertTo-Json }else { "`"`"" }),
         $(if ($firewallObject.useAnyLocalAddressRange) { 'true' }else { 'false' }),
-       (format-ArrString $firewallObject.actualLocalAddressRanges),
+        (format-ArrString $firewallObject.actualLocalAddressRanges),
         $(if ($firewallObject.useAnyRemoteAddressRange) { 'true' }else { 'false' }),
-       (format-ArrString $firewallObject.actualRemoteAddressRanges)
+        (format-ArrString $firewallObject.actualRemoteAddressRanges)
     )
 }
-

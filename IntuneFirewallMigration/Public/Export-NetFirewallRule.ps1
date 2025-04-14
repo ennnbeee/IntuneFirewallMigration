@@ -57,7 +57,7 @@ function Export-NetFirewallRule {
         [switch] $doNotsplitConflictingAttributes,
         # If this flag is toggled, then telemetry is automatically sent to Microsoft.
         [switch] $sendExportTelemetry,
-        # If this flag is toogled, then firewall rules would be imported to Device Configuration else it would be import to Endpoint Security
+        # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to Endpoint Security
         [Switch]
         $DeviceConfiguration
 
@@ -68,7 +68,7 @@ function Export-NetFirewallRule {
 
         try {
 
-            $json = Invoke-MgGraphRequest -Method GET -Uri $String.GraphFirewallRulesEndpoint
+            $json = Invoke-MgGraphRequest -Method GET -Uri $Strings.GraphFirewallRulesEndpoint
             $profiles = $json.value
             $profileNameExist = $true
             while ($profileNameExist) {
@@ -103,7 +103,7 @@ function Export-NetFirewallRule {
 
     $sendExportTelemetry = $False
 
-    # The default behavior for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
+    # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | ConvertTo-IntuneFirewallRule `
             -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes `
             -DeviceConfiguration:$DeviceConfiguration `

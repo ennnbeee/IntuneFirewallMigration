@@ -3,7 +3,7 @@
 . "$PSScriptRoot\..\Private\Use-HelperFunctions.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
 
-$ProfileFirewallRuleLimit = 150
+
 # Sends Intune Firewall objects out to the Intune Powershell SDK
 # and returns the response to the API call
 
@@ -20,7 +20,7 @@ Function Send-IntuneFirewallRulesPolicy {
     Send-IntuneFirewallRulesPolicy -firewallObjects $randomObjects
     Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule -splitConflictingAttributes | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName"
     Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule -sendConvertTelemetry | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName" -sendIntuneFirewallTelemetry $true
-a
+
 
     .PARAMETER firewallObjects the collection of firewall objects to be sent to be processed
     .PARAMETER migratedProfileName an optional argument that represents the prefix for the name of newly created firewall rule profiles
@@ -52,7 +52,7 @@ a
         [switch]
         $sendIntuneFirewallTelemetry,
 
-        # If this flag is toogled, then firewall rules would be imported to Device Configuration else it would be import to device intent
+        # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to device intent
         [switch]
         $DeviceConfiguration
 
@@ -63,6 +63,7 @@ a
     # We apply a filter that strips objects of their null attributes so that Graph can
     # apply default values in the absence of set values
     Process {
+
         $object = $_
         $allProperties = $_.PsObject.Properties.Name
         $nonNullProperties = $allProperties.Where( { $null -ne $object.$_ -and $object.$_ -ne '' })
@@ -71,6 +72,7 @@ a
 
     End {
         # Split the incoming firewall objects into separate profiles
+        $ProfileFirewallRuleLimit = 50
         $profiles = @()
         $currentProfile = @()
         $sentSuccessfully = @()
@@ -115,7 +117,7 @@ a
                     `"@odata.type`": `"#microsoft.graph.windows10EndpointProtectionConfiguration`",
                     `"displayName`": `"$migratedProfileName-$profileNumber`",
                     `"firewallRules`": $profileJson,
-                       }"
+                    }"
             }
             else {
                 $textHeader = 'End-Point Security Payload'

@@ -154,5 +154,4 @@ function Set-SummaryDetail {
         $SummaryDetails.NumberofSuccessfulConvertedRules = $ConvertedRulesNumber
     }
 
-
 }

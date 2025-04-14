@@ -2,6 +2,9 @@
 
 param(
 
+    [Parameter(Mandatory = $true)]
+    [String]$profileName,
+
     [Parameter(HelpMessage = 'Provide the Id of the Entra ID tenant to connect to')]
     [ValidateLength(36, 36)]
     [String]$tenantId,
@@ -89,13 +92,11 @@ Write-Host 'All required scope permissions are present.' -ForegroundColor Green
 #endregion authentication
 
 #region script
-$profileName = ''
 try {
 
-    $json = Invoke-MgGraphRequest -Method GET -Uri 'https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27'
+    $json = Invoke-MgGraphRequest -Method GET -Uri $Strings.GraphFirewallRulesEndpoint
     $profiles = $json.value
     $profileNameExist = $true
-    $profileName = Read-Host -Prompt $Strings.EnterProfile
     while (-not($profileName)) {
         $profileName = Read-Host -Prompt $Strings.ProfileCannotBeBlank
     }

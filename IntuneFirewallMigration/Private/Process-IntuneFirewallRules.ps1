@@ -237,9 +237,6 @@ function Get-SplitIntuneFirewallRuleChoice {
     }
 }
 
-
-
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # The function below are identical to the functions above only that these are specifically targeted toward the device configuration format
 #----------------------------------------------------------------------------------------------------------------------------------------------------
