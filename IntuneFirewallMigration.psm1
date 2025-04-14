@@ -1,5 +1,5 @@
 # Reads values from the module manifest file
-$manifestData = Import-PowerShellDataFile -Path $PSScriptRoot\Intune-prototype-WindowsMDMFirewallRulesMigrationTool.psd1
+$manifestData = Import-PowerShellDataFile -Path $PSScriptRoot\IntuneFirewallMigration.psd1
 
 #Installing dependencies if not already installed [Microsoft.Graph] and [ImportExcel] from the powershell gallery
 $graphVersionBad = '2.26.1'

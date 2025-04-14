@@ -1,6 +1,29 @@
-param([switch]$includeDisabledRules, [switch]$includeLocalRules)
+[CmdletBinding()]
 
-## check for elevation
+param(
+
+    [Parameter(HelpMessage = 'Provide the Id of the Entra ID tenant to connect to')]
+    [ValidateLength(36, 36)]
+    [String]$tenantId,
+
+    [Parameter(HelpMessage = 'Provide the Id of the Entra App registration to be used for authentication')]
+    [ValidateLength(36, 36)]
+    [String]$appId,
+
+    [Parameter(HelpMessage = 'Provide the App secret to allow for authentication to graph')]
+    [ValidateNotNullOrEmpty()]
+    [String]$appSecret,
+
+    [Parameter(HelpMessage = 'Include Disabled Firewall Rules in the export')]
+    [ValidateNotNullOrEmpty()]
+    [switch]$includeDisabledRules,
+
+    [Parameter(HelpMessage = 'Include Local Firewall Rules in the export')]
+    [ValidateNotNullOrEmpty()]
+    [switch]$includeLocalRules
+)
+
+#region preflight
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal $identity
 
@@ -13,24 +36,46 @@ if (!$principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 ## check for running from correct folder location
 Import-Module '.\IntuneFirewallMigration.psm1'
 . '.\IntuneFirewallMigration\Private\Strings.ps1'
+#endregion preflight
 
-
-#Disconnect from Graph
+#region authentication
 if (Get-MgContext) {
     Write-Host 'Disconnecting from existing Graph session.' -ForegroundColor Cyan
     Disconnect-MgGraph
 }
 
-#region scopes
+##scopes required for the script
 $requiredScopes = @('DeviceManagementManagedDevices.ReadWrite.All', 'DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
-#endregion scopes
 
-#region Authentication
-Write-Host 'Connecting to Microsoft Graph...' -ForegroundColor Cyan
-Connect-MgGraph -Scopes $scopes
-$context = Get-MgContext
+
+##authentication
+try {
+    if (!$tenantId) {
+        Write-Host 'Connecting using interactive authentication' -ForegroundColor Yellow
+        Connect-MgGraph -Scopes $scopes -NoWelcome -ErrorAction Stop
+    }
+    else {
+        if ((!$appId -and !$appSecret) -or ($appId -and !$appSecret) -or (!$appId -and $appSecret)) {
+            Write-Host 'Missing App Details, connecting using user authentication' -ForegroundColor Yellow
+            Connect-ToGraph -tenantId $tenantId -Scopes $scopes -ErrorAction Stop
+        }
+        else {
+            Write-Host 'Connecting using App authentication' -ForegroundColor Yellow
+            Connect-ToGraph -tenantId $tenantId -appId $appId -appSecret $appSecret -ErrorAction Stop
+        }
+    }
+    $context = Get-MgContext
+    Write-Host ''
+    Write-Host "Successfully connected to Microsoft Graph Tenant ID $($context.TenantId)." -ForegroundColor Green
+}
+catch {
+    Write-Error $_.Exception.Message
+    Exit
+}
+
 $currentScopes = $context.Scopes
+## Validate required permissions
 $missingScopes = $requiredScopes | Where-Object { $_ -notin $currentScopes }
 if ($missingScopes.Count -gt 0) {
     Write-Host 'WARNING: The following scope permissions are missing:' -ForegroundColor Red
@@ -41,9 +86,9 @@ if ($missingScopes.Count -gt 0) {
 }
 Write-Host ''
 Write-Host 'All required scope permissions are present.' -ForegroundColor Green
-
 #endregion authentication
 
+#region script
 $profileName = ''
 try {
 
@@ -91,5 +136,4 @@ catch {
     Write-Host -ForegroundColor Red $errorMessage
     Write-Host 'No commands completed'
 }
-
-
+#endregion script

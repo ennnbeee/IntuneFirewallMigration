@@ -68,7 +68,7 @@ function Export-NetFirewallRule {
 
         try {
 
-            $json = Invoke-MgGraphRequest -Method GET -Uri 'https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27'
+            $json = Invoke-MgGraphRequest -Method GET -Uri $String.GraphFirewallRulesEndpoint
             $profiles = $json.value
             $profileNameExist = $true
             while ($profileNameExist) {

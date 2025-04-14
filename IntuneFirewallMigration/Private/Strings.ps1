@@ -108,15 +108,19 @@ SendIntuneFirewallRulesPolicyProgressStatus=Importing profiles to Intune
 SendIntuneFirewallRulesPolicyShouldSendData=Sending profile data to Intune
 SendIntuneFirewallRulesPolicyException=User aborted error handling for Send-IntuneFirewallRulesPolicy
 
-#Validate Profile Name
-EnterProfile=Please enter a Profile name
-ProfileExists=The Profile name you provided already exists. Please enter a unique profile name
-ProfileCannotBeBlank =The profile name field cannot be blank. Please enter a valid profile name
+# Validate Profile Name
+EnterProfile=Please enter a name for the Firewall Rules policy
+ProfileExists=The policy name you provided already exists. Please enter a unique policy name
+ProfileCannotBeBlank =The policy name field cannot be blank. Please enter a valid policy name
+
 # General
 Any=Any
 Yes=Yes
 No=No
 YesToAll=Yes To All
 Continue=Continue
+
+# Graph Endpoints
+GraphFirewallRulesEndpoint=https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27
 '@
 }
