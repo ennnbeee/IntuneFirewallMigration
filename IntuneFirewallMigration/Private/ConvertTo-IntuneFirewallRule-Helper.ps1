@@ -182,7 +182,7 @@ function Get-FirewallProtocol {
     )
     $portFilterInstance = Get-NetFirewallPortFilterWrapper -AssociatedNetFirewallRule $firewallObject
 
-    # The behavior of the Get-NetFirewallPortFilter cmdlet is to return the string name of the protocol for these
+    # The behaviour of the Get-NetFirewallPortFilter cmdlet is to return the string name of the protocol for these
     # specific protocols, everything else is a number
     Switch ($portFilterInstance.Protocol) {
         'TCP' { return 6 }

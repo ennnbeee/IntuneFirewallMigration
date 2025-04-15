@@ -1,6 +1,6 @@
 Function Connect-ToGraph {
 
-    <#
+<#
 .SYNOPSIS
 Authenticates to the Graph API via the Microsoft.Graph.Authentication module.
 

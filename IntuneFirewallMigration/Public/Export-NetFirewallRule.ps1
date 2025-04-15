@@ -56,10 +56,7 @@ function Export-NetFirewallRule {
         $CheckProfileName = $true,
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will not automatically be processed and split and the users will be prompted users to split
-        [switch] $doNotsplitConflictingAttributes,
-        # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to Endpoint Security
-        [Switch]
-        $DeviceConfiguration
+        [switch] $doNotsplitConflictingAttributes
 
 
 
@@ -102,8 +99,8 @@ function Export-NetFirewallRule {
 
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
-            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes -DeviceConfiguration:$DeviceConfiguration | `
-            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -DeviceConfiguration:$DeviceConfiguration -splitRules:$splitRules
+            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
+            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules
     )
 
 }

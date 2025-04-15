@@ -137,7 +137,7 @@ function Copy-IntuneFirewallRule {
 
     .NOTES
     Copy-FirewallRule will follow the same copy scheme that Add-Member performs. This means that if Add-Member performs
-    a shallow copy or deep copy, Copy-FirewallRule will mimic this behavior. This means that arrays are shallowly copied.
+    a shallow copy or deep copy, Copy-FirewallRule will mimic this behaviour. This means that arrays are shallowly copied.
     Operations using the shallow copy of an array should be considered carefully when using this function.
 
     .INPUTS
@@ -373,7 +373,7 @@ function Copy-IntuneFirewallRuleDC {
 
     .NOTES
     Copy-FirewallRule will follow the same copy scheme that Add-Member performs. This means that if Add-Member performs
-    a shallow copy or deep copy, Copy-FirewallRule will mimic this behavior. This means that arrays are shallowly copied.
+    a shallow copy or deep copy, Copy-FirewallRule will mimic this behaviour. This means that arrays are shallowly copied.
     Operations using the shallow copy of an array should be considered carefully when using this function.
 
     .INPUTS

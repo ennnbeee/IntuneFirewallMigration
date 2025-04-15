@@ -12,7 +12,7 @@
 RootModule = 'FirewallRuleMigration.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1'
+ModuleVersion = '0.1'
 
 # ID used to uniquely identify this module
 GUID = 'fce09b7f-fd55-4f11-ac9a-ac0f613cd564'

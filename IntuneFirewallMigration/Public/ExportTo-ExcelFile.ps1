@@ -26,7 +26,7 @@ function Get-ExcelFormatObject {
     Converts IntuneFirewall Object to a format that can easily be written to an excel file
 
     .DESCRIPTION
-    This function takes Intunefirewall Object and converts them to a format that is easily writtable to an excel file
+    This function takes Intune firewall Object and converts them to a format that is easily writeable to an excel file
     .EXAMPLE
     Get-ExcelFormatObject intuneFirewallObjects
     Get-ExcelFormatObject intuneFirewallObjects

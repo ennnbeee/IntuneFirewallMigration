@@ -49,12 +49,7 @@ Function Send-IntuneFirewallRulesPolicy {
 
         [Parameter(HelpMessage = 'The number of rules per profiles to be exported.')]
         [ValidateRange(10, 100)]
-        [int]$splitRules = 100,
-
-        # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to device intent
-        [switch]
-        $DeviceConfiguration
-
+        [int]$splitRules = 100
     )
 
     Begin { $firewallArr = @() }
@@ -110,28 +105,19 @@ Function Send-IntuneFirewallRulesPolicy {
             #---------------------------------------------------------------------------------
             $textHeader = ''
             $NewIntuneObject = ''
-            if ($DeviceConfiguration) {
-                $textHeader = 'Device Configuration Payload'
-                $profileJson = $profile | ConvertTo-Json
-                $NewIntuneObject = "{
-                    `"@odata.type`": `"#microsoft.graph.windows10EndpointProtectionConfiguration`",
-                    `"displayName`": `"$migratedProfileName-$profileNumber`",
-                    `"firewallRules`": $profileJson,
-                    }"
-            }
-            else {
-                $textHeader = 'End-Point Security Payload'
-                $profileAsString = '['
-                ForEach ($rules in $profile) {
-                    if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
-                        $profileAsString += (ConvertTo-IntuneFirewallRuleString $rules) + ']'
-                    }
-                    else {
-                        $profileAsString += (ConvertTo-IntuneFirewallRuleString $rules) + ','
-                    }
+
+            $textHeader = 'EndPoint Security Payload'
+            $profileAsString = '['
+            ForEach ($rules in $profile) {
+                if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
+                    $profileAsString += (ConvertTo-IntuneFirewallRuleString $rules) + ']'
                 }
-                $profileJson = $profileAsString | ConvertTo-Json
-                $NewIntuneObject = "{
+                else {
+                    $profileAsString += (ConvertTo-IntuneFirewallRuleString $rules) + ','
+                }
+            }
+            $profileJson = $profileAsString | ConvertTo-Json
+            $NewIntuneObject = "{
                                     `"description`" : `"Migrated firewall profile created on $date`",
                                     `"displayName`" : `"$migratedProfileName-$profileNumber`",
                                     `"roleScopeTagIds`" :[],
@@ -141,12 +127,12 @@ Function Send-IntuneFirewallRulesPolicy {
                                                         `"valueJson`" : $profileJson
                                                     }]
                                     }"
-            }
+
             If ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
                 Try {
 
                     $successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance' -Body $NewIntuneObject
-                    $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune (End-Point Security)`r`n"
+                    $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune (Endpoint Security)`r`n"
 
                     Write-Verbose $successResponse
                     Write-Verbose $NewIntuneObject

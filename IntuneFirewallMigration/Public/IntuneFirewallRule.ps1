@@ -117,7 +117,7 @@ function ConvertTo-IntuneFirewallRuleString {
     Creates a new Intune firewall string.
 
     .DESCRIPTION
-    A string would be created to represent the intunefirewallrule. This would be formatted in the same way a json serializer would format an object
+    A string would be created to represent the intune firewall rule. This would be formatted in the same way a json serializer would format an object
 
     .EXAMPLE
     New-IntuneFirewallRule
