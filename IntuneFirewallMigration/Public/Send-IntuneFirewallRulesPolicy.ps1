@@ -1,5 +1,4 @@
 . "$PSScriptRoot\IntuneFirewallRule.ps1"
-. "$PSScriptRoot\..\Private\Send-Telemetry.ps1"
 . "$PSScriptRoot\..\Private\Use-HelperFunctions.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
 
@@ -19,7 +18,7 @@ Function Send-IntuneFirewallRulesPolicy {
     Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
     Send-IntuneFirewallRulesPolicy -firewallObjects $randomObjects
     Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule -splitConflictingAttributes | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName"
-    Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule -sendConvertTelemetry | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName" -sendIntuneFirewallTelemetry $true
+    Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName"
 
 
     .PARAMETER firewallObjects the collection of firewall objects to be sent to be processed
@@ -48,9 +47,9 @@ Function Send-IntuneFirewallRulesPolicy {
         [String]
         $migratedProfileName = $Strings.SendIntuneFirewallRulesPolicyProfileNameDefault,
 
-        # If this flag is toggled, then telemetry is automatically sent to Microsoft.
-        [switch]
-        $sendIntuneFirewallTelemetry,
+        [Parameter(HelpMessage = 'The number of rules per profiles to be exported.')]
+        [ValidateRange(10, 100)]
+        [int]$splitRules = 100,
 
         # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to device intent
         [switch]
@@ -66,19 +65,19 @@ Function Send-IntuneFirewallRulesPolicy {
 
         $object = $_
         $allProperties = $_.PsObject.Properties.Name
+        #$allProperties = ($object | Get-Member).Name
         $nonNullProperties = $allProperties.Where( { $null -ne $object.$_ -and $object.$_ -ne '' })
         $firewallArr += $object | Select-Object $nonNullProperties
     }
 
     End {
         # Split the incoming firewall objects into separate profiles
-        $ProfileFirewallRuleLimit = 50
         $profiles = @()
         $currentProfile = @()
         $sentSuccessfully = @()
         $failedToSend = @()
         ForEach ($firewall in $firewallArr) {
-            If ($currentProfile.Count -ge $ProfileFirewallRuleLimit) {
+            If ($currentProfile.Count -ge $splitRules) {
                 # Arrays may be "unrolled", so we need to enforce no unrolling
                 $profiles += , $currentProfile
                 $currentProfile = @()
@@ -90,9 +89,10 @@ Function Send-IntuneFirewallRulesPolicy {
             # Arrays may be "unrolled", so we need to enforce no unrolling
             $profiles += , $currentProfile
         }
-        $profileNumber = 0
 
+        $profileNumber = 0
         $remainingProfiles = $profiles.Count
+
         $date = Get-Date
         $dateformatted = Get-Date -Format 'M_dd_yy'
         $responsePath = './logs/http_response ' + $dateformatted + '.txt'
@@ -157,7 +157,7 @@ Function Send-IntuneFirewallRulesPolicy {
 
                 }
                 Catch {
-                    # Intune Graph errors are telemetry points that can detect payload mistakes
+                    # Intune Graph errors are points that can detect payload mistakes
                     $errorMessage = $_.ToString()
                     #$errorType = $_.Exception.GetType().ToString()
                     $failedToSend += Get-ExcelFormatObject -intuneFirewallObjects $profile -errorMessage $errorMessage
@@ -168,9 +168,8 @@ Function Send-IntuneFirewallRulesPolicy {
             Add-Content $payloadPath "`r `n$date `r `n$textHeader `r `n$NewIntuneObject"
         }
 
-        #$dataTelemetry = '{0}/{1} Intune Firewall Rules were successfully imported to Endpoint-Security' -f $sentSuccessfully.Count, $firewallArr.Count
+
         Export-ExcelFile -fileName 'Imported_to_Intune' -succeededToSend $sentSuccessfully
-        #Send-SuccessIntuneFirewallGraphTelemetry -data $dataTelemetry
         Export-ExcelFile -fileName 'Failed_to_Import_to_Intune' -failedToSend $failedToSend
         Set-SummaryDetail -numberOfSplittedRules $firewallArr.Count -ProfileName $migratedProfileName -successCount $sentSuccessfully.Count
         Get-SummaryDetail

@@ -51,33 +51,6 @@ FirewallRuleInterfaceType=InterfaceType
 FirewallRuleEdgeTraversalException=Could not map edge traversal policy with direction '{0}' and edge policy '{1}'
 FirewallRuleEdgeTraversal=EdgeTraversalPolicy
 
-# Send-Telemetry
-TelemetrySuccessfullyConvertedToIntuneFirewallRule=SuccessfullyConvertedToIntuneFirewallRule
-TelemetryIntuneFirewallRuleGraphImportSuccess=IntuneFirewallRuleGraphImportSuccess
-TelemetryConvertToIntuneFirewallRule=ConvertToIntuneFirewallRule
-TelemetryIntuneFirewallRuleGraph=IntuneFirewallRuleGraph
-Message=Message
-ErrorType=ErrorType
-SuccessType=SuccessType
-FirewallRuleProperty=FirewallRuleProperty
-TelemetrySignature=Telemetry Signature
-TelemetryError=Microsoft Telemetry Error
-TelemetrySuccess=Microsoft Telemetry Success
-TelemetryId=Telemetry Id
-TelemetryErrorTitle=Unhandled exception processing Intune Firewall Rule
-TelemetryErrorMessage=Encountered the following error:\n{0}\n{1}\nWould you like to send this error message to Microsoft to help us improve our product?
-TelemetryPromptTitle=Send Telemetry?
-TelemetryPromptMessage=If an error is discovered while importing the firewall rules, would you like to send this error message to Microsoft to help us improve our product?
-TelemetryPromptSendYes=Send the error message to Microsoft
-TelemetryPromptSendNo=Do not send anything
-TelemetryErrorExceptionType=Exception Type: {0}\n
-TelemetryErrorFirewallRuleProperty=Firewall Rule Property: {0}\n
-TelemetrySendErrorYes=Send the error message to Microsoft and continue
-TelemetrySendErrorNo=Do not send anything and stop execution
-TelemetrySendErrorYesToAll=Treat all other errors encountered as 'Yes'
-TelemetrySendErrorContinue=Do not send anything and continue processing other firewall rules
-TelemetryInitializeTelemetryError=Encountered an error loading dependencies needed to send feedback to Microsoft: {0}
-
 # Process-IntuneFirewallRules
 SplitFirewallRuleTitle=Found a Firewall Rule which needs some work.
 SplitFirewallRuleMessage=The Intune Graph API does not support firewall rules where PackageFamilyName, ServiceName, and FilePath are set at the same time.\n{0}\nA new firewall rule will be created for each non-empty property.\nWould you like to split the firewall rule into separate rules?

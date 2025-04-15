@@ -1,5 +1,5 @@
 . "$PSScriptRoot\ConvertTo-IntuneFirewallRule.ps1"
-. "$PSScriptRoot\Get-SampleFirewallData.ps1"
+. "$PSScriptRoot\Get-FirewallData.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
 
 function Export-NetFirewallRule {
@@ -15,16 +15,13 @@ function Export-NetFirewallRule {
     Export-NetFirewallRule
     Export-NetFirewallRule -PolicyStoreSource GroupPolicy
     Export-NetFirewallRule -PolicyStoreSource All
-    Export-NetFirewallRule -splitConflictingAttributes -sendExportTelemetry
+    Export-NetFirewallRule -splitConflictingAttributes
 
     .NOTES
     Export-NetFirewallRule is a wrapper for the cmdlet call to Get-NetFirewallRule piped to ConvertTo-IntuneFirewallRule.
 
     If -splitConflictingAttributes is toggled, then firewall rules with multiple attributes of filePath, serviceName,
     or packageFamilyName will automatically be processed and split instead of prompting users to split the firewall rule
-
-    If -sendExportTelemetry is toggled, then error messages encountered will automatically be sent to Microsoft and the
-    tool will continue processing net firewall rules.
 
     .LINK
     https://docs.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallrule?view=win10-ps#description
@@ -50,13 +47,16 @@ function Export-NetFirewallRule {
         [ValidateSet('Full', 'Test')]
         [String]
         $Mode = 'Full',
+
+        [Parameter(HelpMessage = 'The number of rules per profiles to be exported.')]
+        [ValidateRange(10, 100)]
+        [int]$splitRules = 100,
+
         [bool]
         $CheckProfileName = $true,
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will not automatically be processed and split and the users will be prompted users to split
         [switch] $doNotsplitConflictingAttributes,
-        # If this flag is toggled, then telemetry is automatically sent to Microsoft.
-        [switch] $sendExportTelemetry,
         # If this flag is toggled, then firewall rules would be imported to Device Configuration else it would be import to Endpoint Security
         [Switch]
         $DeviceConfiguration
@@ -100,16 +100,10 @@ function Export-NetFirewallRule {
 
     }
 
-
-    $sendExportTelemetry = $False
-
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
-    return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | ConvertTo-IntuneFirewallRule `
-            -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes `
-            -DeviceConfiguration:$DeviceConfiguration `
-        | Send-IntuneFirewallRulesPolicy `
-            -migratedProfileName:$ProfileName `
-            -DeviceConfiguration:$DeviceConfiguration
+    return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
+            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes -DeviceConfiguration:$DeviceConfiguration | `
+            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -DeviceConfiguration:$DeviceConfiguration -splitRules:$splitRules
     )
 
 }

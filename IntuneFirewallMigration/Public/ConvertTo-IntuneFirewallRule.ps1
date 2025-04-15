@@ -2,7 +2,6 @@
 . "$PSScriptRoot\ExportTo-ExcelFile.ps1"
 . "$PSScriptRoot\..\Private\ConvertTo-IntuneFirewallRule-Helper.ps1"
 . "$PSScriptRoot\..\Private\Process-IntuneFirewallRules.ps1"
-. "$PSScriptRoot\..\Private\Send-Telemetry.ps1"
 . "$PSScriptRoot\..\Private\Use-HelperFunctions.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
 
@@ -17,7 +16,7 @@ function ConvertTo-IntuneFirewallRule {
     .EXAMPLE
     Get-NetFirewallRule | ConvertTo-IntuneFirewallRule
     Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule -splitConflictingAttributes
-    Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule -splitConflictingAttributes -sendConvertTelemetry
+    Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule -splitConflictingAttributes
 
     .PARAMETER incomingFirewallRules a stream of firewall rules to be processed and converted
 
@@ -48,8 +47,6 @@ function ConvertTo-IntuneFirewallRule {
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will automatically be processed and split instead of prompting users to split
         [switch] $doNotSplitConflictingAttributes,
-        # If this flag is toggled, then telemetry is automatically sent to Microsoft.
-        [switch] $sendConvertTelemetry,
         [switch] $DeviceConfiguration
 
     )
@@ -173,38 +170,6 @@ function ConvertTo-IntuneFirewallRule {
             }
             Catch {
 
-                <#$errorMessage = $_.ToString()
-                $errorType = $_.Exception.GetType().ToString()
-                # If the property does not exist, then the result is simply an empty string
-                $errorFirewallRuleProperty = $_.Exception.firewallRuleProperty
-
-                #-----------------------------------------------------------------------------------------
-                if ($sendIntuneFirewallTelemetry) {
-                    $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
-                        -sendErrorTelemetryInitialized $sendIntuneFirewallTelemetry `
-                        -telemetryExceptionType $errorType
-                }
-                else {
-                    $choice = $Strings.Continue
-                }
-                #------------------------------------------------------------------------------------------
-                # Choice is the index of the option
-
-                Switch ($choice) {
-                    $Strings.Yes {
-                        Send-FailureToConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
-                            -errorType $errorType `
-                            -firewallRuleProperty $errorFirewallRuleProperty
-                    }
-                    $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoException }
-                    $Strings.YesToAll {
-                        Send-FailureToConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
-                            -errorType $errorType `
-                            -firewallRuleProperty $errorFirewallRuleProperty
-                        $sendConvertTelemetry = $false
-                    }
-                    $Strings.Continue { continue }
-                }#>
                 # Add items that failed to be formatted to a collection of objects to be exported to an excel file
                 $newExcelObject = New-Object -TypeName ExcelFormat
                 $newExcelObject.displayName = $firewallRule.DisplayName
@@ -213,13 +178,12 @@ function ConvertTo-IntuneFirewallRule {
                 $newExcelObject.action = $firewallRule.Action
                 $newExcelObject.errorMessage = $errorMessage
                 $rulesFailedToConvert += $newExcelObject
+
             }
         }
-        #$dataTelemetry = '{0}/{1} Firewall rules were successfully converted to IntuneFirewallRuleObjects' -f ($firewallRules.Count - $rulesFailedToConvert.Count), $firewallRules.Count
-        # Create an excel file with information about the items that where incompatible with intunes format
+                # Create an excel file with information about the items that where incompatible with Intune format
         Export-ExcelFile -fileName 'RuleError' -failedToConvert $rulesFailedToConvert
         Set-SummaryDetail -numberOfFirewallRules $firewallRules.Count -ConvertedRulesNumber ($firewallRules.Count - $rulesFailedToConvert.Count )
-        #Send-SuccessCovertToIntuneFirewallRuleTelemetry -data $dataTelemetry
         return $intuneFirewallRuleObjects
     }
 }

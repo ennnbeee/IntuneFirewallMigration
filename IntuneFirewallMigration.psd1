@@ -12,7 +12,7 @@
 RootModule = 'FirewallRuleMigration.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0'
+ModuleVersion = '1.1'
 
 # ID used to uniquely identify this module
 GUID = 'fce09b7f-fd55-4f11-ac9a-ac0f613cd564'
@@ -51,7 +51,7 @@ RequiredModules = @("Microsoft.Graph.Authentication", "ImportExcel")
 # FunctionsToExport = 'Get-Function'
 
 # Cmdlets to export from this module
-CmdletsToExport = @('Get-SampleFirewallData','Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph')
+CmdletsToExport = @('Get-FirewallData','Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph')
 
 # Variables to export from this module
 # VariablesToExport = '*'

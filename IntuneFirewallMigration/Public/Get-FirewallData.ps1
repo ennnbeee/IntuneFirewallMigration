@@ -4,11 +4,11 @@ function Get-FirewallData {
     Gets a sample collection of firewall rules
 
     .DESCRIPTION
-    Get-SampleFirewallData allows the developer specify the number of firewall rules to be imported
+    Get-FirewallData allows the developer specify the number of firewall rules to be imported
     This is for testing purposes
 
     .EXAMPLE
-    Get-SampleFirewallData
+    Get-FirewallData
 
 
     .OUTPUTS

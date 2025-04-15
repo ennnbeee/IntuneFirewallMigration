@@ -223,7 +223,6 @@ function Get-FirewallLocalPortRange {
     return Get-FirewallPortRangeHelper -portInstance $portFilter.LocalPort -exportType $Strings.FirewallRuleLocalPort -protocol $portFilter.Protocol
 }
 
-
 function Get-FirewallRemotePortRange {
     <#
     .SYNOPSIS

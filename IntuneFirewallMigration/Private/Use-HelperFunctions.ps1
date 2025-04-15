@@ -1,5 +1,5 @@
 . "$PSScriptRoot\Strings.ps1"
-# This file represents several utility functions that do not belong to telemetry, exporting, or importing alone.
+# This file represents several utility functions that do not belong to exporting, or importing alone.
 
 function Show-OperationProgress {
     <#

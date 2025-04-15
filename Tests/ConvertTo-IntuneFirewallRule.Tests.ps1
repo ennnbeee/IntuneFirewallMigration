@@ -52,10 +52,8 @@ Describe 'ConvertTo-IntuneFirewallRule' {
             # Returns 'Continue' to avoid having to handle other side effects from the selection
             Mock Test-IntuneFirewallRuleSplit -MockWith { return $true }
             Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return $Strings.No }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule
-            Assert-MockCalled Get-IntuneFirewallRuleErrorTelemetryChoice -Exactly 1
         }
 
         It "Should export two objects if user selected '$($Strings.YesToAll)' and two objects were returned from Split-IntuneFirewallChoice" {
@@ -75,43 +73,6 @@ Describe 'ConvertTo-IntuneFirewallRule' {
         }
     }
 
-    Context 'Telemetry test cases' {
-        Mock Get-FirewallPackageFamilyName -MockWith { return 'foo' }
-        Mock Get-FirewallFilePath -MockWith { return 'foo' }
-        Mock Get-FirewallServiceName -MockWith { return 'foo' }
-        Mock Get-FirewallProtocol -MockWith { return 0 }
-        Mock Get-FirewallLocalPortRange -MockWith { return @() }
-        Mock Get-FirewallRemotePortRange -MockWith { return @() }
-        Mock Get-FirewallLocalAddressRange -MockWith { return @() }
-        Mock Get-FirewallRemoteAddressRange -MockWith { return @() }
-        Mock Get-FirewallProfileType -MockWith { return 2 }
-        Mock Get-FirewallAction -MockWith { return 'foo' }
-        Mock Get-FirewallDirection -MockWith { return 'foo' }
-        Mock Get-FirewallInterfaceType -MockWith { return 'foo' }
-        Mock Get-FirewallLocalUserAuthorization -MockWith { return 'foo' }
-        Mock Get-FirewallEdgeTraversalPolicy -MockWith { return 'foo' }
-
-        # There is an array of only one object provided.
-        $mockFirewallObject = @{displayName = 'foo'; description = 'foo'; Profiles = 2; Action = 2; Direction = 2 }
-        Mock Get-NetFirewallRule -MockWith { return @($mockFirewallObject) }
-
-        It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.Yes)'" {
-            Mock Test-IntuneFirewallRuleSplit -MockWith { Throw 'Yes Error' }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Yes }
-            Mock Send-ConvertToIntuneFirewallRuleTelemetry
-
-            Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 0
-            Assert-MockCalled Send-ConvertToIntuneFirewallRuleTelemetry -Times 1 -Exactly
-        }
-
-        It "Should throw an error if given '$($Strings.No)'" {
-            Mock Test-IntuneFirewallRuleSplit -MockWith { Throw 'foo' }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.No }
-
-            { Get-NetFirewallRule | ConvertTo-IntuneFirewallRule } | Should -Throw $Strings.ConvertToIntuneFirewallRuleNoException
-        }
-    }
-
     # Separate context to avoid colliding mocks with "Yes" test case
     Context "Telemetry '$($Strings.YesToAll)'" {
         Mock Get-FirewallPackageFamilyName -MockWith { Throw 'foo' }
@@ -122,11 +83,8 @@ Describe 'ConvertTo-IntuneFirewallRule' {
 
         It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.YesToAll)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw 'Yes To All Error' }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.YesToAll }
-            Mock Send-ConvertToIntuneFirewallRuleTelemetry
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 0
-            Assert-MockCalled Send-ConvertToIntuneFirewallRuleTelemetry -Times 1 -Exactly
         }
     }
 
@@ -140,11 +98,8 @@ Describe 'ConvertTo-IntuneFirewallRule' {
 
         It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.Continue)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw 'Continue Error' }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
-            Mock Send-ConvertToIntuneFirewallRuleTelemetry
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 0
-            Assert-MockCalled Send-ConvertToIntuneFirewallRuleTelemetry -Times 0 -Exactly
         }
     }
 

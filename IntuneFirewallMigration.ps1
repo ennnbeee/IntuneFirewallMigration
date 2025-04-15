@@ -2,8 +2,24 @@
 
 param(
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, HelpMessage = 'The name of the profile to be created')]
     [String]$profileName,
+
+    [Parameter(HelpMessage = 'This determines if we are running a test version or a full importation. The default value is full. The test version imports only 20 rules')]
+    [ValidateSet('Full', 'Test')]
+    [String]$mode = 'Full',
+
+    [Parameter(HelpMessage = 'The number of rules per profiles to be exported. The default value is 100 rules per profile')]
+    [ValidateRange(10, 100)]
+    [int]$splitRules = 100,
+
+    [Parameter(HelpMessage = 'Include Disabled Firewall Rules in the export')]
+    [ValidateNotNullOrEmpty()]
+    [switch]$includeDisabledRules,
+
+    [Parameter(HelpMessage = 'Include Local Firewall Rules in the export')]
+    [ValidateNotNullOrEmpty()]
+    [switch]$includeLocalRules,
 
     [Parameter(HelpMessage = 'Provide the Id of the Entra ID tenant to connect to')]
     [ValidateLength(36, 36)]
@@ -15,15 +31,8 @@ param(
 
     [Parameter(HelpMessage = 'Provide the App secret to allow for authentication to graph')]
     [ValidateNotNullOrEmpty()]
-    [String]$appSecret,
+    [String]$appSecret
 
-    [Parameter(HelpMessage = 'Include Disabled Firewall Rules in the export')]
-    [ValidateNotNullOrEmpty()]
-    [switch]$includeDisabledRules,
-
-    [Parameter(HelpMessage = 'Include Local Firewall Rules in the export')]
-    [ValidateNotNullOrEmpty()]
-    [switch]$includeLocalRules
 )
 
 #region preflight
@@ -97,9 +106,6 @@ try {
     $json = Invoke-MgGraphRequest -Method GET -Uri $Strings.GraphFirewallRulesEndpoint
     $profiles = $json.value
     $profileNameExist = $true
-    while (-not($profileName)) {
-        $profileName = Read-Host -Prompt $Strings.ProfileCannotBeBlank
-    }
     while ($profileNameExist) {
         if (![string]::IsNullOrEmpty($profiles)) {
             foreach ($display in $profiles) {
@@ -119,16 +125,17 @@ try {
             $profileNameExist = $false
         }
     }
+
     $EnabledOnly = $true
     if ($includeDisabledRules) {
         $EnabledOnly = $false
     }
 
     if ($includeLocalRules) {
-        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly -PolicyStoreSource 'All'
+        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly -PolicyStoreSource 'All' -Mode $mode -splitRules $splitRules
     }
     else {
-        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly
+        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly -Mode $mode -splitRules $splitRules
     }
 
 }
