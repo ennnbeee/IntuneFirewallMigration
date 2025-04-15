@@ -54,7 +54,7 @@ $appSecret = 'supersecretstuff'
 
 ## ⏯ Usage
 
-Clone or download this repository to the machine where you want to capture Firewall Rules, then execute the following command lines:
+Clone or download this repository to the machine where you want to capture Firewall Rules, then execute the following commands from within the folder:
 
 ### Testing
 
