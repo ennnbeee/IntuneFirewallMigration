@@ -1,34 +1,106 @@
-# Firewall Rule Migration Script
+# 🔥🧱🪄 IntuneFirewallMigration
 
-Updated version of the [Microsoft tool](https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-rule-tool), with the following changes:
+IntuneFirewallMigration is an updated version of the no longer available [Microsoft tool](https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-rule-tool) which was removed in June 2024:
 
-- Removed the reliance on the github repo.
-- Changed to the `Microsoft.Graph` PowerShell module.
+![Firewall Migration Tool](/img/mstool.png)
+
+This version is a streamlined version of the existing tool with the following changes:
+
+- Removed the reliance on the old Microsoft GitHub repository.
+- Changed to the `Microsoft.Graph.Authentication` PowerShell module.
 - Changed to `Invoke-MgGraphRequest` for calls to Graph.
-- Force using Endpoint Security templates for firewall rule policies.
-- Changed the Authentication approach to Graph to use `deviceCode`.
-- Disabled sending of telemetry on success and failure.
-- Fixed an issue when checking for profile name matching when there are no existing firewall rule policies.
+- Forces using Endpoint Security templates for firewall rule policies over Device Configuration.
+- Disabled and removed all telemetry functions and calls.
+- Fixed issues when checking for profile name matching when there are no existing firewall rule policies.
 - Resolved issues with module `Microsoft.Graph` version 2.26.1 module on PowerShell 5.
-- Changed requirements to use `Microsoft.Graph.Authentication` only.
 
-## Script Use
+## ⚠ Public Preview Notice
 
-- Download the **FirewallRuleMigration.zip** file and unzip on your Windows device.
-- Open PowerShell as Administrator.
-- Navigate to the extracted folder, your PowerShell prompt should be in the **FirewallRuleMigration** folder.
-- Run `Set-ExecutionPolicy Bypass` accepting all prompts.
-- Run `./Export-FirewallRules.ps1` with the corresponding switches (`-includeDisabledRules`, `-includeLocalRules`) if required.
-- Authenticate to Graph using a Global Admin account*.
-- Enter a profile name for the Firewall rules policy when prompted.
-- Wait for rules to be created.
+IntuneFirewallMigration is currently in Public Preview, meaning that although it is functional, you may encounter issues or bugs with the script.
 
-> *The script will disconnect all existing Graph sessions and check for the required scopes.
+> [!TIP]
+> If you do encounter bugs, want to contribute, submit feedback or suggestions, please create an issue.
 
-## Notes
+## 🗒 Prerequisites
 
-Tested on the following versions of Windows and PowerShell:
+> [!IMPORTANT]
+>
+> - Supports PowerShell 7 on Windows
+> - `Microsoft.Graph.Authentication` module should be installed, the script will detect and install if required.
+> - `ImportExcel` module should be installed, the script will detect and install if required.
+> - Entra ID App Registration with appropriate Graph Scopes or using Interactive Sign-In with a privileged account.
 
-- Windows 10 22H2, 5.1.19041.4291 - **Working**
-- Windows 11 23H2, 5.1.22621.2506 - **Working**
-- Windows 11 23H2, 7.4.2 - **Working**
+## 🔄 Updates
+
+- **v0.1**
+  - Initial release
+
+## 🔑 Permissions
+
+The PowerShell script requires the below Graph API permissions, you can create an Entra ID App Registration with the following Graph API Application permissions:
+
+- `DeviceManagementConfiguration.ReadWrite.All`
+- `DeviceManagementManagedDevices.ReadWrite.All`
+
+The script can then be authenticated by passing in the App Registration details:
+
+```PowerShell
+$tenantId = '437e8ffb-3030-469a-99da-e5b527908001'
+$appId = '375793fc-0132-4938-bc80-a907e5cba4d0'
+$appSecret = 'supersecretstuff'
+
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -tenantId $tenantId -appId $appId -appSecret $appSecret
+```
+
+## ⏯ Usage
+
+Clone or download this repository to the machine where you want to capture Firewall Rules, then execute the following command lines:
+
+### Testing
+
+Create Firewall rule profiles with the name prefix `TestMigration` using only the first **20** **enabled** **Group Policy** applied firewall rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -mode Test
+```
+
+### General Usage
+
+Create Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName TestMigration
+```
+
+### Local Rules
+
+Create Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeLocalRules
+```
+
+### Disabled Rules
+
+Create Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50
+```
+
+## 🚑 Support
+
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/ennnbeee/IntuneFirewallMigration/issues) page
+2. Open a new issue if needed
+
+Thank you for your support.
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Created by [Nick Benton](https://github.com/ennnbeee) of [odds+endpoints](https://www.oddsandendpoints.co.uk/)
