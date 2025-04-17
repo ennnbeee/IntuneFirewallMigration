@@ -53,7 +53,6 @@ function ConvertTo-IntuneFirewallRule {
     Begin {
         $firewallRules = @()
         $rulesFailedToConvert = @()
-
     }
 
     Process {

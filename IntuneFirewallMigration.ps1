@@ -50,12 +50,12 @@ Import-Module '.\IntuneFirewallMigration.psm1'
 . '.\IntuneFirewallMigration\Private\Strings.ps1'
 #endregion preflight
 
-#region authentication
+<#region authentication
 if (Get-MgContext) {
     Write-Host 'Disconnecting from existing Graph session.' -ForegroundColor Cyan
     Disconnect-MgGraph
 }
-
+#>
 ##scopes required for the script
 $requiredScopes = @('DeviceManagementManagedDevices.ReadWrite.All', 'DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
@@ -103,13 +103,23 @@ Write-Host 'All required scope permissions are present.' -ForegroundColor Green
 #region script
 try {
 
-    $json = Invoke-MgGraphRequest -Method GET -Uri $Strings.GraphFirewallRulesEndpoint
-    $profiles = $json.value
+    $graphResults = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?`$filter=technologies has 'MicrosoftSense'" -OutputType PSObject
+    $results = @()
+    $results += $graphResults.value
+    $pages = $graphResults.'@odata.nextLink'
+    while ($null -ne $pages) {
+        $additional = Invoke-MgGraphRequest -Uri $pages -Method Get -OutputType PSObject
+        if ($pages) {
+            $pages = $additional.'@odata.nextLink'
+        }
+        $results += $additional.value
+    }
+    $profiles = $results
     $profileNameExist = $true
     while ($profileNameExist) {
         if (![string]::IsNullOrEmpty($profiles)) {
             foreach ($display in $profiles) {
-                $name = $display.displayName.Split('-')
+                $name = $display.name.Split('-')
                 $profileNameExist = $false
                 if ($name[0] -eq $profileName) {
                     $profileNameExist = $true
@@ -130,14 +140,12 @@ try {
     if ($includeDisabledRules) {
         $EnabledOnly = $false
     }
-
-    if ($includeLocalRules) {
-        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly -PolicyStoreSource 'All' -Mode $mode -splitRules $splitRules
-    }
-    else {
-        Export-NetFirewallRule -ProfileName $profileName -CheckProfileName $false -EnabledOnly:$EnabledOnly -Mode $mode -splitRules $splitRules
+    switch ($includeLocalRules) {
+        $true { $policyStoreSource = 'All' }
+        $false { $policyStoreSource = 'GroupPolicy' }
     }
 
+    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules
 }
 catch {
     $errorMessage = $_.ToString()

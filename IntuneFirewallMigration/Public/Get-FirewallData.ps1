@@ -66,7 +66,7 @@ function Get-FirewallData {
     switch ($Mode) {
         'Test' {
 
-            Write-Host "`rYou are now in Test Mode. Only 20 firewall rules would be sent...`r"
+            Write-Host "`rYou are now in Test Mode. Only 20 firewall rules are captured...`r"
             if ($allFirewallRules.Count -ge 20) {
                 return $allFirewallRules[0..20]
             }

@@ -51,7 +51,7 @@ RequiredModules = @("Microsoft.Graph.Authentication", "ImportExcel")
 # FunctionsToExport = 'Get-Function'
 
 # Cmdlets to export from this module
-CmdletsToExport = @('Get-FirewallData','Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph')
+CmdletsToExport = @('Get-FirewallData','Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph', 'ConvertTo-IntuneSCFirewallRule')
 
 # Variables to export from this module
 # VariablesToExport = '*'

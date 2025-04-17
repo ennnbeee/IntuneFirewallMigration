@@ -93,7 +93,7 @@ function Export-ExcelFile {
         $failedToConvert
     )
     $i = 0
-    $date = Get-Date -Format 'M_dd_yy_HH'
+    $date = Get-Date -Format 'yyy_MM_dd_HH_mm'
     $path = '.\logs\' + $fileName + '_' + $i + ' ' + $date + '.xlsx'
 
     while (Test-Path $path) {

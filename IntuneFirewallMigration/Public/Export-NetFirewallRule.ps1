@@ -52,50 +52,11 @@ function Export-NetFirewallRule {
         [ValidateRange(10, 100)]
         [int]$splitRules = 100,
 
-        [bool]
-        $CheckProfileName = $true,
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will not automatically be processed and split and the users will be prompted users to split
         [switch] $doNotsplitConflictingAttributes
 
-
-
     )
-    if ($CheckProfileName -eq $true) {
-
-        try {
-
-            $json = Invoke-MgGraphRequest -Method GET -Uri $Strings.GraphFirewallRulesEndpoint
-            $profiles = $json.value
-            $profileNameExist = $true
-            while ($profileNameExist) {
-                if (![string]::IsNullOrEmpty($profiles)) {
-                    foreach ($display in $profiles) {
-                        $name = $display.displayName.Split('-')
-                        $profileNameExist = $false
-                        if ($name[0] -eq $profileName) {
-                            $profileNameExist = $true
-                            $profileName = Read-Host -Prompt $Strings.ProfileExists
-                            while (-not($profileName)) {
-                                $profileName = Read-Host -Prompt $Strings.ProfileCannotBeBlank
-                            }
-                            break
-                        }
-                    }
-                }
-                else {
-                    $profileNameExist = $false
-                }
-            }
-        }
-        catch {
-            $errorMessage = $_.ToString()
-
-            Write-Error $errorMessage
-            return
-        }
-
-    }
 
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `

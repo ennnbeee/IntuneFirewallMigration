@@ -20,7 +20,6 @@ Function Send-IntuneFirewallRulesPolicy {
     Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule -splitConflictingAttributes | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName"
     Get-NetFirewallRule -PolicyStore PersistentStore -PolicyStoreSourceType Local | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy -migratedProfileName "someCustomName"
 
-
     .PARAMETER firewallObjects the collection of firewall objects to be sent to be processed
     .PARAMETER migratedProfileName an optional argument that represents the prefix for the name of newly created firewall rule profiles
 
@@ -89,7 +88,7 @@ Function Send-IntuneFirewallRulesPolicy {
         $remainingProfiles = $profiles.Count
 
         $date = Get-Date
-        $dateformatted = Get-Date -Format 'M_dd_yy'
+        $dateformatted = Get-Date -Format 'yyyy_MM_dd_HH_mm'
         $responsePath = './logs/http_response ' + $dateformatted + '.txt'
         $payloadPath = './logs/http_payload ' + $dateformatted + '.txt'
         if (-not(Test-Path './logs')) {
@@ -106,7 +105,7 @@ Function Send-IntuneFirewallRulesPolicy {
             $textHeader = ''
             $NewIntuneObject = ''
 
-            $textHeader = 'EndPoint Security Payload'
+            $textHeader = 'Endpoint Security Payload'
             $profileAsString = '['
             ForEach ($rules in $profile) {
                 if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
