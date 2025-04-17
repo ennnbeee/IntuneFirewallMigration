@@ -15,7 +15,7 @@ RootModule = 'FirewallRuleMigration.psm1'
 ModuleVersion = '0.1'
 
 # ID used to uniquely identify this module
-GUID = 'fce09b7f-fd55-4f11-ac9a-ac0f613cd564'
+GUID = '70020e90-cdfd-449f-8f8d-9d5eb71eb667'
 
 # Author of this module
 Author = 'Kevin Hui, Tessy Emadoye, Nick Benton'

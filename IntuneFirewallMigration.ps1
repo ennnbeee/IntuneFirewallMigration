@@ -46,8 +46,8 @@ if (!$principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 }
 
 ## check for running from correct folder location
-Import-Module '.\IntuneFirewallMigration.psm1'
-. '.\IntuneFirewallMigration\Private\Strings.ps1'
+Import-Module '.\IntuneFirewallMigration.psm1' -Force
+Import-Module '.\IntuneFirewallMigration\Private\Strings.ps1' -Force
 #endregion preflight
 
 <#region authentication
@@ -114,7 +114,7 @@ try {
         }
         $results += $additional.value
     }
-    $profiles = $results
+    $profiles = $results | Where-Object { $_.templateReference.templateDisplayName -eq "Windows Firewall Rules" }
     $profileNameExist = $true
     while ($profileNameExist) {
         if (![string]::IsNullOrEmpty($profiles)) {

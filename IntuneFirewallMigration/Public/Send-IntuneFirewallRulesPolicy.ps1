@@ -104,8 +104,8 @@ Function Send-IntuneFirewallRulesPolicy {
             #---------------------------------------------------------------------------------
             $textHeader = ''
             $NewIntuneObject = ''
-
-            $textHeader = 'Endpoint Security Payload'
+            $esNewIntuneObject = ''
+            $textHeader = 'Settings Catalog Payload'
             $profileAsString = '['
             ForEach ($rules in $profile) {
                 if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
@@ -116,7 +116,7 @@ Function Send-IntuneFirewallRulesPolicy {
                 }
             }
             $profileJson = $profileAsString | ConvertTo-Json
-            $NewIntuneObject = "{
+            $esNewIntuneObject = "{
                                     `"description`" : `"Migrated firewall profile created on $date`",
                                     `"displayName`" : `"$migratedProfileName-$profileNumber`",
                                     `"roleScopeTagIds`" :[],
@@ -127,11 +127,14 @@ Function Send-IntuneFirewallRulesPolicy {
                                                     }]
                                     }"
 
+            $NewIntuneObject = $esNewIntuneObject | ConvertTo-IntuneSCFirewallRule
+
             If ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
                 Try {
 
-                    $successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance' -Body $NewIntuneObject
-                    $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune (Endpoint Security)`r`n"
+                    #$successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance' -Body $NewIntuneObject
+                    $successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/configurationPolicies' -Body $NewIntuneObject
+                    $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune (Settings Catalog)`r`n"
 
                     Write-Verbose $successResponse
                     Write-Verbose $NewIntuneObject

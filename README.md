@@ -4,12 +4,12 @@ IntuneFirewallMigration is an updated version of the no longer available [Micros
 
 ![Firewall Migration Tool](/img/mstool.png)
 
-This version is a streamlined version of the existing tool with the following changes:
+This version is a streamlined version of the previous tool with the following changes:
 
+- **Uses Settings Catalog firewall rule policies natively**
 - Removed the reliance on the old Microsoft GitHub repository.
 - Changed to the `Microsoft.Graph.Authentication` PowerShell module.
 - Changed to `Invoke-MgGraphRequest` for calls to Graph.
-- Forces using Endpoint Security templates for firewall rule policies over Device Configuration.
 - Disabled and removed all telemetry functions and calls.
 - Fixed issues when checking for profile name matching when there are no existing firewall rule policies.
 - Resolved issues with module `Microsoft.Graph` version 2.26.1 module on PowerShell 5.
@@ -26,8 +26,8 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 > [!IMPORTANT]
 >
 > - Supports PowerShell 5 and 7 on Windows
-> - `Microsoft.Graph.Authentication` module should be installed, the script will detect and install if required.
-> - `ImportExcel` module should be installed, the script will detect and install if required.
+> - `Microsoft.Graph.Authentication` the script will detect and install if required.
+> - `ImportExcel` the script will detect and install if required.
 > - Entra ID App Registration with appropriate Graph Scopes or using Interactive Sign-In with a privileged account.
 
 ## 🔄 Updates
