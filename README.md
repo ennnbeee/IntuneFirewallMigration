@@ -93,10 +93,10 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 
 ### ⚙ Endpoint Security Profiles
 
-Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **90** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 90 -legacyProfile
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -legacyProfile
 ```
 
 ## 🚑 Support
