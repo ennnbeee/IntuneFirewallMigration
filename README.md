@@ -32,7 +32,10 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.1**
+- **v0.2**
+  - Creates Setting Catalog policies as standard
+  - Allows for creation of Endpoint Security policies using the `legacyProfile` switch
+- v0.1
   - Initial release
 
 ## 🔑 Permissions
@@ -90,10 +93,10 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 
 ### Endpoint Security Profiles
 
-Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **90** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50 -legacyProfile
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 90 -legacyProfile
 ```
 
 ## 🚑 Support
