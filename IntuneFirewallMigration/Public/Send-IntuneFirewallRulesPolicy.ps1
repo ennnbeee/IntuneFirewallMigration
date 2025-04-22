@@ -48,7 +48,11 @@ Function Send-IntuneFirewallRulesPolicy {
 
         [Parameter(HelpMessage = 'The number of rules per profiles to be exported.')]
         [ValidateRange(10, 100)]
-        [int]$splitRules = 100
+        [int]$splitRules = 100,
+
+        [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
+        [ValidateNotNullOrEmpty()]
+        [switch]$legacyProfile
     )
 
     Begin { $firewallArr = @() }
@@ -56,7 +60,6 @@ Function Send-IntuneFirewallRulesPolicy {
     # We apply a filter that strips objects of their null attributes so that Graph can
     # apply default values in the absence of set values
     Process {
-
         $object = $_
         $allProperties = $_.PsObject.Properties.Name
         #$allProperties = ($object | Get-Member).Name
@@ -87,10 +90,9 @@ Function Send-IntuneFirewallRulesPolicy {
         $profileNumber = 0
         $remainingProfiles = $profiles.Count
 
-        $date = Get-Date
-        $dateformatted = Get-Date -Format 'yyyy_MM_dd_HH_mm'
-        $responsePath = './logs/http_response ' + $dateformatted + '.txt'
-        $payloadPath = './logs/http_payload ' + $dateformatted + '.txt'
+        $dateFormatted = Get-Date -Format 'yyyy-MM-dd-HH-mm'
+        $responsePath = './logs/http_response ' + $dateFormatted + '.txt'
+        $payloadPath = './logs/http_payload ' + $dateFormatted + '.txt'
         if (-not(Test-Path './logs')) {
             $item = New-Item './logs' -ItemType Directory
         }
@@ -104,8 +106,6 @@ Function Send-IntuneFirewallRulesPolicy {
             #---------------------------------------------------------------------------------
             $textHeader = ''
             $NewIntuneObject = ''
-            $esNewIntuneObject = ''
-            $textHeader = 'Settings Catalog Payload'
             $profileAsString = '['
             ForEach ($rules in $profile) {
                 if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
@@ -116,8 +116,8 @@ Function Send-IntuneFirewallRulesPolicy {
                 }
             }
             $profileJson = $profileAsString | ConvertTo-Json
-            $esNewIntuneObject = "{
-                                    `"description`" : `"Migrated firewall profile created on $date`",
+            $NewIntuneObject = "{
+                                    `"description`" : `"Migrated firewall profile created on $dateFormatted`",
                                     `"displayName`" : `"$migratedProfileName-$profileNumber`",
                                     `"roleScopeTagIds`" :[],
                                     `"settingsDelta`" : [{
@@ -127,18 +127,27 @@ Function Send-IntuneFirewallRulesPolicy {
                                                     }]
                                     }"
 
-            $NewIntuneObject = $esNewIntuneObject | ConvertTo-IntuneSCFirewallRule
 
             If ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
                 Try {
 
-                    #$successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance' -Body $NewIntuneObject
-                    $successResponse = Invoke-MgGraphRequest -Method POST -Uri 'https://graph.microsoft.com/beta/deviceManagement/configurationPolicies' -Body $NewIntuneObject
+                    if ($legacyProfile) {
+                        $textHeader = 'Endpoint Security Payload'
+                        $uri = 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance'
+
+                    }
+                    Else {
+                        $textHeader = 'Settings Catalog Payload'
+                        $NewIntuneObject = $NewIntuneObject | ConvertTo-IntuneSCFirewallRule
+                        $uri = 'https://graph.microsoft.com/beta/deviceManagement/configurationPolicies'
+                    }
+
+                    $successResponse = Invoke-MgGraphRequest -Method POST -Uri $uri -Body $NewIntuneObject
                     $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune (Settings Catalog)`r`n"
 
                     Write-Verbose $successResponse
                     Write-Verbose $NewIntuneObject
-                    Add-Content $responsePath "`r `n $date `r `n $successMessage `r `n $successResponse"
+                    Add-Content $responsePath "`r `n $dateFormatted `r `n $successMessage `r `n $successResponse"
 
                     $profileNumber++
                     $sentSuccessfully += Get-ExcelFormatObject -intuneFirewallObjects $profile
@@ -150,10 +159,10 @@ Function Send-IntuneFirewallRulesPolicy {
                     #$errorType = $_.Exception.GetType().ToString()
                     $failedToSend += Get-ExcelFormatObject -intuneFirewallObjects $profile -errorMessage $errorMessage
 
-                    Add-Content $responsePath "`r `n $date `r `n $errorMessage"
+                    Add-Content $responsePath "`r `n $dateFormatted `r `n $errorMessage"
                 }
             }
-            Add-Content $payloadPath "`r `n$date `r `n$textHeader `r `n$NewIntuneObject"
+            Add-Content $payloadPath "`r `n$dateFormatted `r `n$textHeader `r `n$NewIntuneObject"
         }
 
 

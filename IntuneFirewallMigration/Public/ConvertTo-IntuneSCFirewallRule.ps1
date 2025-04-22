@@ -33,7 +33,13 @@ function ConvertTo-IntuneSCFirewallRule {
     }
 
     Process {
-        $jsonProfile = $_ | Out-String | ConvertFrom-Json
+        try {
+            $jsonProfile = $_ | Out-String | ConvertFrom-Json
+        }
+        catch {
+            Write-Error 'Failed to convert incoming profile to JSON. Please check the input.'
+            return
+        }
         $scPolicyName = $jsonProfile.displayName
         $scPolicyDescription = $jsonProfile.description
         $fwRules = $jsonProfile.settingsDelta.valueJson | ConvertFrom-Json
@@ -87,10 +93,14 @@ function ConvertTo-IntuneSCFirewallRule {
             Clear-Variable -Name ('ruleName', 'ruleDescription', 'ruleDirection', 'ruleAction', 'ruleFWProfiles', 'rulePackageFamilyName', 'ruleFilePath', 'ruleService', 'ruleProtocol', 'ruleLocalPorts', 'ruleRemotePorts', 'ruleInterfaces', 'ruleUseAnyLocalAddresses', 'ruleLocalAddresses', 'ruleUseAnyRemoteAddresses', 'ruleRemoteAddresses') -ErrorAction Ignore
 
             # Capturing the Rule Data
-            $ruleName = $fwRule.displayName
+            $ruleName = ($fwRule.displayName)
             if ($duplicateRuleNames.name -contains $ruleName) {
+                # If the rule name is a duplicate, append a number to the end of the rule name
                 $ruleName = $ruleName + '-' + $fwRuleNameCount++
             }
+            $ruleName = $ruleName.Replace('\', '\\')
+
+
             $ruleDescription = $fwRule.description
             $ruleDirection = $fwRule.trafficDirection
             $ruleAction = $fwRule.action
@@ -1154,9 +1164,16 @@ function ConvertTo-IntuneSCFirewallRule {
             }
         }
 
-        $JSONPolicy = $JSONPolicyStart + $scJSONAllRules + $JSONPolicyEnd
-        $scPolicyJSON = $JSONPolicy | Out-String | ConvertFrom-Json | ConvertTo-Json -Depth 100
-        return $scPolicyJSON
+        try {
+            $JSONPolicy = $JSONPolicyStart + $scJSONAllRules + $JSONPolicyEnd
+            Test-JSONData -JSON $JSONPolicy
+            $scPolicyJSON = $JSONPolicy | Out-String | ConvertFrom-Json | ConvertTo-Json -Depth 100
+            return $scPolicyJSON
+        }
+        catch {
+
+        }
+
     }
 
 }

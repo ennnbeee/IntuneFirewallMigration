@@ -54,11 +54,11 @@ $appSecret = 'supersecretstuff'
 
 ## ⏯ Usage
 
-Clone or download this repository to the machine where you want to capture Firewall Rules, then execute the following commands from within the folder:
+Clone or download this repository to the Windows machine where you want to capture Firewall Rules, then execute the following commands from within the extracted or cloned folder:
 
 ### Testing
 
-Create Firewall rule profiles with the name prefix `TestMigration` using only the first **20** **enabled** **Group Policy** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` using only the first **20** **enabled** **Group Policy** applied firewall rules:
 
 ```powershell
 .\IntuneFirewallMigration.ps1 -profileName TestMigration -mode Test
@@ -66,7 +66,7 @@ Create Firewall rule profiles with the name prefix `TestMigration` using only th
 
 ### General Usage
 
-Create Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
 
 ```powershell
 .\IntuneFirewallMigration.ps1 -profileName TestMigration
@@ -74,18 +74,26 @@ Create Firewall rule profiles with the name prefix `TestMigration` with **100** 
 
 ### Local Rules
 
-Create Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **70** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeLocalRules
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeLocalRules -splitRules 70
 ```
 
 ### Disabled Rules
 
-Create Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
 
 ```powershell
 .\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50
+```
+
+### Endpoint Security Profiles
+
+Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50 -legacyProfile
 ```
 
 ## 🚑 Support

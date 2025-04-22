@@ -52,6 +52,10 @@ function Export-NetFirewallRule {
         [ValidateRange(10, 100)]
         [int]$splitRules = 100,
 
+        [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
+        [ValidateNotNullOrEmpty()]
+        [switch]$legacyProfile,
+
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will not automatically be processed and split and the users will be prompted users to split
         [switch] $doNotsplitConflictingAttributes
@@ -61,7 +65,7 @@ function Export-NetFirewallRule {
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
             ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
-            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules
+            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile
     )
 
 }

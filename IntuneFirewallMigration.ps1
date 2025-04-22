@@ -21,6 +21,10 @@ param(
     [ValidateNotNullOrEmpty()]
     [switch]$includeLocalRules,
 
+    [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
+    [ValidateNotNullOrEmpty()]
+    [switch]$legacyProfile,
+
     [Parameter(HelpMessage = 'Provide the Id of the Entra ID tenant to connect to')]
     [ValidateLength(36, 36)]
     [String]$tenantId,
@@ -50,18 +54,18 @@ Import-Module '.\IntuneFirewallMigration.psm1' -Force
 Import-Module '.\IntuneFirewallMigration\Private\Strings.ps1' -Force
 #endregion preflight
 
-<#region authentication
+#region authentication
 if (Get-MgContext) {
     Write-Host 'Disconnecting from existing Graph session.' -ForegroundColor Cyan
     Disconnect-MgGraph
 }
-#>
+
 ##scopes required for the script
 $requiredScopes = @('DeviceManagementManagedDevices.ReadWrite.All', 'DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
 
 
-##authentication
+## authentication
 try {
     if (!$tenantId) {
         Write-Host 'Connecting using interactive authentication' -ForegroundColor Yellow
@@ -102,8 +106,13 @@ Write-Host 'All required scope permissions are present.' -ForegroundColor Green
 
 #region script
 try {
-
-    $graphResults = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?`$filter=technologies has 'MicrosoftSense'" -OutputType PSObject
+    if ($legacyProfile) {
+        $uri = 'https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27'
+    }
+    else {
+        $uri = "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?`$filter=technologies has 'MicrosoftSense'"
+    }
+    $graphResults = Invoke-MgGraphRequest -Method GET -Uri $uri -OutputType PSObject
     $results = @()
     $results += $graphResults.value
     $pages = $graphResults.'@odata.nextLink'
@@ -114,12 +123,17 @@ try {
         }
         $results += $additional.value
     }
-    $profiles = $results | Where-Object { $_.templateReference.templateDisplayName -eq "Windows Firewall Rules" }
+    $profiles = $results | Where-Object { $_.templateReference.templateDisplayName -eq 'Windows Firewall Rules' }
     $profileNameExist = $true
     while ($profileNameExist) {
         if (![string]::IsNullOrEmpty($profiles)) {
             foreach ($display in $profiles) {
-                $name = $display.name.Split('-')
+                if ($legacyProfile){
+                    $name = $display.displayName.Split('-')
+                }
+                else {
+                    $name = $display.name.Split('-')
+                }
                 $profileNameExist = $false
                 if ($name[0] -eq $profileName) {
                     $profileNameExist = $true
@@ -145,7 +159,7 @@ try {
         $false { $policyStoreSource = 'GroupPolicy' }
     }
 
-    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules
+    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules -legacyProfile:$legacyProfile
 }
 catch {
     $errorMessage = $_.ToString()
