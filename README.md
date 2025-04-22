@@ -34,7 +34,7 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 - **v0.2**
   - Creates Setting Catalog policies as standard
-  - Allows for creation of Endpoint Security policies using the `legacyProfile` switch
+  - Allows for creation of legacy Endpoint Security policies using the `legacyProfile` switch
 - v0.1
   - Initial release
 
@@ -59,7 +59,7 @@ $appSecret = 'supersecretstuff'
 
 Clone or download this repository to the Windows machine where you want to capture Firewall Rules, then execute the following commands from within the extracted or cloned folder:
 
-### Testing
+### 🧪 Testing
 
 Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` using only the first **20** **enabled** **Group Policy** applied firewall rules:
 
@@ -67,7 +67,7 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 .\IntuneFirewallMigration.ps1 -profileName TestMigration -mode Test
 ```
 
-### General Usage
+### 🧱 General Usage
 
 Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
 
@@ -75,7 +75,7 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 .\IntuneFirewallMigration.ps1 -profileName TestMigration
 ```
 
-### Local Rules
+### 🏠 Local Rules
 
 Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **70** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
 
@@ -83,7 +83,7 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 .\IntuneFirewallMigration.ps1 -profileName TestMigration -includeLocalRules -splitRules 70
 ```
 
-### Disabled Rules
+### 📐 Disabled Rules
 
 Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
 
@@ -91,7 +91,7 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 .\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50
 ```
 
-### Endpoint Security Profiles
+### ⚙ Endpoint Security Profiles
 
 Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **90** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
 
