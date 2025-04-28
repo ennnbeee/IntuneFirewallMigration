@@ -94,6 +94,7 @@ function ConvertTo-IntuneSCFirewallRule {
             # Capturing the Rule Data
             $ruleName = ($fwRule.displayName)
             if ($duplicateRules.Group -contains $fwRule) {
+                # If the rule name is duplicated, append the index of the rule to the name
                 $ruleName = $ruleName + '-' + ($duplicateRules.Group | Where-Object { $_.displayName -eq $fwRule.displayName }).indexof($fwRule)
             }
 
