@@ -28,7 +28,6 @@ function ConvertTo-IntuneSCFirewallRule {
 
     Begin {
         $scJSONAllRules = @()
-        $fwRuleNameCount = 0
 
     }
 
@@ -42,7 +41,7 @@ function ConvertTo-IntuneSCFirewallRule {
         }
         $scPolicyName = $jsonProfile.displayName
         $scPolicyDescription = $jsonProfile.description
-        $fwRules = $jsonProfile.settingsDelta.valueJson | ConvertFrom-Json
+        $fwRules = Get-Unique -InputObject ($jsonProfile.settingsDelta.valueJson | ConvertFrom-Json)
         $JSONPolicyStart = @"
         {
             "description": "$scPolicyDescription",
@@ -82,7 +81,7 @@ function ConvertTo-IntuneSCFirewallRule {
 '@
 
         # Capturing existing rules with duplicate names, as Settings Catalog will not allow duplicates
-        $duplicateRuleNames = $fwRules.displayName | Group-Object | Where-Object { $_.count -gt 1 }
+        $duplicateRules = $fwRules | Group-Object -Property displayName | Where-Object { $_.count -gt 1 }
     }
 
     End {
@@ -94,13 +93,12 @@ function ConvertTo-IntuneSCFirewallRule {
 
             # Capturing the Rule Data
             $ruleName = ($fwRule.displayName)
-            if ($duplicateRuleNames.name -contains $ruleName) {
-                # If the rule name is a duplicate, append a number to the end of the rule name
-                $ruleName = $ruleName + '-' + $fwRuleNameCount++
+            if ($duplicateRules.Group -contains $fwRule) {
+                # If the rule name is duplicated, append the index of the rule to the name
+                $ruleName = $ruleName + '-' + ($duplicateRules.Group | Where-Object { $_.displayName -eq $fwRule.displayName }).indexof($fwRule)
             }
+
             $ruleName = $ruleName.Replace('\', '\\')
-
-
             $ruleDescription = $fwRule.description
             $ruleDirection = $fwRule.trafficDirection
             $ruleAction = $fwRule.action
