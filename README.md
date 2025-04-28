@@ -32,7 +32,10 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.2**
+- **v0.2.1**
+  - Ensures only unique firewall rules are created in Settings Catalog policies
+  - Improved duplicate firewall name handling
+- v0.2
   - Creates Setting Catalog policies as standard
   - Allows for creation of legacy Endpoint Security policies using the `legacyProfile` switch
 - v0.1

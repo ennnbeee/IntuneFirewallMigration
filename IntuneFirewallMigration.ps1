@@ -128,7 +128,7 @@ try {
     while ($profileNameExist) {
         if (![string]::IsNullOrEmpty($profiles)) {
             foreach ($display in $profiles) {
-                if ($legacyProfile){
+                if ($legacyProfile) {
                     $name = $display.displayName.Split('-')
                 }
                 else {
