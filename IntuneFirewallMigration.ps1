@@ -13,6 +13,10 @@ param(
     [ValidateRange(10, 100)]
     [int]$splitRules = 100,
 
+    [Parameter(HelpMessage = 'The rules from a specific firewall profile to be imported. The default value is all profiles.')]
+    [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+    [String]$firewallProfile = 'all',
+
     [Parameter(HelpMessage = 'Include Disabled Firewall Rules in the export')]
     [ValidateNotNullOrEmpty()]
     [switch]$includeDisabledRules,
@@ -159,7 +163,7 @@ try {
         $false { $policyStoreSource = 'GroupPolicy' }
     }
 
-    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules -legacyProfile:$legacyProfile
+    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile
 }
 catch {
     $errorMessage = $_.ToString()

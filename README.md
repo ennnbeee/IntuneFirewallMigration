@@ -4,9 +4,10 @@ IntuneFirewallMigration is an updated version of the no longer available [Micros
 
 ![Firewall Migration Tool](/img/mstool.png)
 
-This version is a streamlined version of the previous tool with the following changes:
+This version is a streamlined version of the Microsoft tool with the following changes:
 
 - **Uses Settings Catalog firewall rule policies natively**
+- **Allows for selection of only specific firewall profile rules (Domain, Private, Public)**
 - Removed the reliance on the old Microsoft GitHub repository.
 - Changed to the `Microsoft.Graph.Authentication` PowerShell module.
 - Changed to `Invoke-MgGraphRequest` for calls to Graph.
@@ -32,7 +33,11 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.2.1**
+- **v0.3**
+  - Able to upload only specific firewall profile rules from: domain, private, public, all, or not configured
+  - Duplicate rule names now shown as (1), (2) etc.
+  - Improved conversion of rules to Settings Catalog format
+- v0.2.1
   - Ensures only unique firewall rules are created in Settings Catalog policies
   - Improved duplicate firewall name handling
 - v0.2
@@ -72,34 +77,61 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMi
 
 ### 🧱 General Usage
 
-Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `FirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration
+.\IntuneFirewallMigration.ps1 -profileName FirewallRules
+```
+
+### 🏢 Domain Profile Rules
+
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `DomainFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules, only uploading **domain** profile rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName DomainFirewallRules -firewallProfile domain
+```
+
+### 🤫 Private Profile Rules
+
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `PrivateFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules, only uploading **private** profile rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName PrivateFirewallRules -firewallProfile private
+```
+
+### 🏞 Public Profile Rules
+
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `PublicFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules, only uploading **public** profile rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName PublicFirewallRules -firewallProfile public
 ```
 
 ### 🏠 Local Rules
 
-Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **70** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `LocalFirewallRules` with **70** rules per profile, using all **enabled** **Group Policy and Locally** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeLocalRules -splitRules 70
+.\IntuneFirewallMigration.ps1 -profileName LocalFirewallRules -includeLocalRules -splitRules 70
 ```
 
 ### 📐 Disabled Rules
 
-Creates **Settings Catalog** Firewall rule profiles with the name prefix `TestMigration` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `DisabledFirewallRules` with **50** rules per profile, using all **enabled and disabled** **Group Policy** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -includeDisabledRules -splitRules 50
+.\IntuneFirewallMigration.ps1 -profileName DisabledFirewallRules -includeDisabledRules -splitRules 50
 ```
 
 ### ⚙ Endpoint Security Profiles
 
-Creates **Endpoint Security** Firewall rule profiles with the name prefix `TestMigration` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
+> [!IMPORTANT]
+> These legacy Profiles don't appear in Intune immediately, looks like they are processed behind the scenes and converted now.
+
+Creates **Endpoint Security** Firewall rule profiles with the name prefix `LegacyProfileFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules:
 
 ```powershell
-.\IntuneFirewallMigration.ps1 -profileName TestMigration -legacyProfile
+.\IntuneFirewallMigration.ps1 -profileName LegacyProfileFirewallRules -legacyProfile
 ```
 
 ## 🚑 Support

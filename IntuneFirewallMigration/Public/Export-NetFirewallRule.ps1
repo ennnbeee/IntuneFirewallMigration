@@ -1,3 +1,4 @@
+. "$PSScriptRoot\Select-IntuneFirewallRule.ps1"
 . "$PSScriptRoot\ConvertTo-IntuneFirewallRule.ps1"
 . "$PSScriptRoot\Get-FirewallData.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
@@ -52,6 +53,10 @@ function Export-NetFirewallRule {
         [ValidateRange(10, 100)]
         [int]$splitRules = 100,
 
+        [Parameter(HelpMessage = 'The rules from a specific firewall profile to be imported. The default value is all profiles.')]
+        [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+        [String]$firewallProfile = 'all',
+
         [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
         [ValidateNotNullOrEmpty()]
         [switch]$legacyProfile,
@@ -65,7 +70,8 @@ function Export-NetFirewallRule {
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
             ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
-            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile
+            Select-IntuneFirewallRule -firewallProfile:$firewallProfile | `
+            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile
     )
 
 }

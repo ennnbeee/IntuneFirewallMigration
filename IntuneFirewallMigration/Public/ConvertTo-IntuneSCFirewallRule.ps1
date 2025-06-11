@@ -1,12 +1,16 @@
 function ConvertTo-IntuneSCFirewallRule {
     <#
     .SYNOPSIS
+    Convert Intune Endpoint Security policy object to Settings Catalog JSON format for firewall rules.
 
     .DESCRIPTION
+    This function converts an Intune Endpoint Security policy object to Settings Catalog JSON format for firewall rules.
 
     .EXAMPLE
+    ConvertTo-IntuneSCFirewallRule -incomingRules $rules
 
-    .PARAMETER incomingProfile a Intune Endpoint Security policy object to be processed and converted to Settings Catalog JSON
+    .PARAMETER incomingRules
+    An Intune Endpoint Security policy object to be processed and converted to Settings Catalog JSON
 
     .NOTES
 
@@ -22,64 +26,18 @@ function ConvertTo-IntuneSCFirewallRule {
     Param(
 
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        $incomingProfile
+        $incomingRules
 
     )
 
     Begin {
-        $scJSONAllRules = @()
+        $scRules = @()
 
     }
 
     Process {
-        try {
-            $jsonProfile = $_ | Out-String | ConvertFrom-Json
-        }
-        catch {
-            Write-Error 'Failed to convert incoming profile to JSON. Please check the input.'
-            return
-        }
-        $scPolicyName = $jsonProfile.displayName
-        $scPolicyDescription = $jsonProfile.description
-        $fwRules = Get-Unique -InputObject ($jsonProfile.settingsDelta.valueJson | ConvertFrom-Json)
-        $JSONPolicyStart = @"
-        {
-            "description": "$scPolicyDescription",
-            "name": "$scPolicyName",
-            "platforms": "windows10",
-            "technologies@odata.type": "#microsoft.graph.deviceManagementConfigurationTechnologies",
-            "technologies": "mdm,microsoftSense",
-            "templateReference": {
-                "@odata.type": "#microsoft.graph.deviceManagementConfigurationPolicyTemplateReference",
-                "templateId": "19c8aa67-f286-4861-9aa0-f23541d31680_1",
-                "templateFamily@odata.type": "#microsoft.graph.deviceManagementConfigurationTemplateFamily",
-                "templateFamily": "endpointSecurityFirewall",
-                "templateDisplayName": "Microsoft Defender Firewall Rules",
-                "templateDisplayVersion": "Version 1"
-            },
-            "settings": [
-                {
-                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationSetting",
-                    "settingInstance": {
-                        "@odata.type": "#microsoft.graph.deviceManagementConfigurationGroupSettingCollectionInstance",
-                        "settingDefinitionId": "vendor_msft_firewall_mdmstore_firewallrules_{firewallrulename}",
-                        "settingInstanceTemplateReference": {
-                            "@odata.type": "#microsoft.graph.deviceManagementConfigurationSettingInstanceTemplateReference",
-                            "settingInstanceTemplateId": "76c7a8be-67d2-44bf-81a5-38c94926b1a1"
-                        },
-                        "groupSettingCollectionValue@odata.type": "#Collection(microsoft.graph.deviceManagementConfigurationGroupSettingValue)",
-                        "groupSettingCollectionValue": [
 
-"@
-
-        $JSONPolicyEnd = @'
-                        ]
-                    }
-                }
-            ]
-        }
-'@
-
+        $fwRules = $_ | ConvertFrom-Json | ConvertFrom-Json
         # Capturing existing rules with duplicate names, as Settings Catalog will not allow duplicates
         $duplicateRules = $fwRules | Group-Object -Property displayName | Where-Object { $_.count -gt 1 }
     }
@@ -95,16 +53,22 @@ function ConvertTo-IntuneSCFirewallRule {
             $ruleName = ($fwRule.displayName)
             if ($duplicateRules.Group -contains $fwRule) {
                 # If the rule name is duplicated, append the index of the rule to the name
-                $ruleName = $ruleName + '-' + ($duplicateRules.Group | Where-Object { $_.displayName -eq $fwRule.displayName }).indexof($fwRule)
+                $ruleIndex = ($duplicateRules.Group | Where-Object { $_.displayName -eq $fwRule.displayName }).indexof($fwRule)
+                if ($ruleIndex -ne 0) {
+                    $ruleName = $ruleName + ' (' + $ruleIndex + ')'
+                }
             }
-
-            $ruleName = $ruleName.Replace('\', '\\')
+            if ($null -ne $ruleName) {
+                $ruleName = $ruleName.Replace('\', '\\')
+            }
             $ruleDescription = $fwRule.description
             $ruleDirection = $fwRule.trafficDirection
             $ruleAction = $fwRule.action
             $ruleFWProfiles = $fwRule.profileTypes
             $rulePackageFamilyName = $fwRule.packageFamilyName
-            $ruleFilePath = ($fwRule.filePath).Replace('\', '\\')
+            if ($null -ne $ruleFilePath) {
+                $ruleFilePath = $ruleFilePath.Replace('\', '\\')
+            }
             $ruleService = $fwRule.serviceName
             $ruleProtocol = $fwRule.protocol
             $ruleLocalPorts = $fwRule.localPortRanges
@@ -683,7 +647,7 @@ function ConvertTo-IntuneSCFirewallRule {
 
                 # Build the first Rule and add it to array
                 $JSONRule = $JSONRuleStart + $JSONRuleName + $JSONRuleState + $JSONRuleDirection + $JSONRuleProtocol + $JSONRuleLocalAddressRange + $JSONRuleInterface + $JSONRulePackageFamily + $JSONRuleFilePath + $JSONRuleAuthUsers + $JSONRuleRemotePorts + $JSONRuleFWProfile + $JSONRuleService + $JSONRuleLocalPorts + $JSONRuleRemoteAddressRange + $JSONRuleAction + $JSONRuleDescription + $JSONRuleEnd
-                $scJSONAllRules += $JSONRule
+                $scRules += $JSONRule
             }
             # JSON data is different for each subsequent rule in the policy
             else {
@@ -1158,19 +1122,11 @@ function ConvertTo-IntuneSCFirewallRule {
 
                 # Build the subsequent Rule and add to array
                 $JSONRule = $JSONRuleStart + $JSONRuleName + $JSONRuleState + $JSONRuleDirection + $JSONRuleProtocol + $JSONRuleLocalAddressRange + $JSONRuleInterface + $JSONRulePackageFamily + $JSONRuleFilePath + $JSONRuleAuthUsers + $JSONRuleRemotePorts + $JSONRuleFWProfile + $JSONRuleService + $JSONRuleLocalPorts + $JSONRuleRemoteAddressRange + $JSONRuleAction + $JSONRuleDescription + $JSONRuleEnd
-                $scJSONAllRules += $JSONRule
+                $scRules += $JSONRule
             }
         }
 
-        try {
-            $JSONPolicy = $JSONPolicyStart + $scJSONAllRules + $JSONPolicyEnd
-            Test-JSONData -JSON $JSONPolicy
-            $scPolicyJSON = $JSONPolicy | Out-String | ConvertFrom-Json | ConvertTo-Json -Depth 100
-            return $scPolicyJSON
-        }
-        catch {
-
-        }
+        return $scRules
 
     }
 
