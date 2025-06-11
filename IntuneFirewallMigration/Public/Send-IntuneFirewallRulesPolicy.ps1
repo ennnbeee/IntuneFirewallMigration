@@ -1,7 +1,7 @@
 . "$PSScriptRoot\IntuneFirewallRule.ps1"
 . "$PSScriptRoot\..\Private\Use-HelperFunctions.ps1"
 . "$PSScriptRoot\..\Private\Strings.ps1"
-
+. "$PSScriptRoot\ConvertTo-IntuneSCFirewallRule.ps1"
 
 # Sends Intune Firewall objects out to the Intune Powershell SDK
 # and returns the response to the API call
@@ -49,6 +49,10 @@ Function Send-IntuneFirewallRulesPolicy {
         [Parameter(HelpMessage = 'The number of rules per profiles to be exported.')]
         [ValidateRange(10, 100)]
         [int]$splitRules = 100,
+
+        [Parameter()]
+        [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+        $firewallProfile,
 
         [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
         [ValidateNotNullOrEmpty()]
@@ -116,7 +120,7 @@ Function Send-IntuneFirewallRulesPolicy {
                 }
             }
             $profileJson = $profileAsString | ConvertTo-Json
-            #$profileJson | Out-File "./logs/$migratedProfileName-$profileNumber.json"
+            #$profileJson | Out-File "./logs/$migratedProfileName-$firewallProfile-$profileNumber.json"
             if ($legacyProfile) {
                 $textHeader = 'Endpoint Security Payload'
                 $uri = 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance'
@@ -124,7 +128,7 @@ Function Send-IntuneFirewallRulesPolicy {
 
                 $NewIntuneObject = "{
                                         `"description`" : `"Migrated firewall profile created on $dateFormatted`",
-                                        `"displayName`" : `"$migratedProfileName-$profileNumber`",
+                                        `"displayName`" : `"$migratedProfileName-$firewallProfile-$profileNumber`",
                                         `"roleScopeTagIds`" :[],
                                         `"settingsDelta`" : [{
                                                             `"@odata.type`": `"#microsoft.graph.deviceManagementCollectionSettingInstance`",
@@ -140,7 +144,7 @@ Function Send-IntuneFirewallRulesPolicy {
                 $JSONPolicyStart = @"
                 {
                     "description": "Migrated firewall profile created on $dateFormatted",
-                    "name": "$migratedProfileName-$profileNumber",
+                    "name": "$migratedProfileName-$firewallProfile-$profileNumber",
                     "platforms": "windows10",
                     "technologies@odata.type": "#microsoft.graph.deviceManagementConfigurationTechnologies",
                     "technologies": "mdm,microsoftSense",
@@ -178,10 +182,8 @@ Function Send-IntuneFirewallRulesPolicy {
                 $scJSONAllRules = $profileJson | ConvertTo-IntuneSCFirewallRule
                 $NewIntuneObject = $JSONPolicyStart + $scJSONAllRules + $JSONPolicyEnd
                 Test-JSONData -JSON $NewIntuneObject
-                $NewIntuneObject = $NewIntuneObject | Out-String | ConvertFrom-Json | ConvertTo-Json -Depth 100
+                #$NewIntuneObject | Out-File "./logs/$migratedProfileName-$firewallProfile-$profileNumber.json"
             }
-
-
 
             If ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
                 Try {

@@ -10,7 +10,7 @@
     RootModule      = 'FirewallRuleMigration.psm1'
 
     # Version number of this module.
-    ModuleVersion   = '0.2.1'
+    ModuleVersion   = '0.3'
 
     # ID used to uniquely identify this module
     GUID            = '70020e90-cdfd-449f-8f8d-9d5eb71eb667'
@@ -49,7 +49,7 @@
     # FunctionsToExport = 'Get-Function'
 
     # Cmdlets to export from this module
-    CmdletsToExport = @('Get-FirewallData', 'Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph', 'ConvertTo-IntuneSCFirewallRule')
+    CmdletsToExport = @('Get-FirewallData', 'Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph', 'ConvertTo-IntuneSCFirewallRule', 'Select-IntuneFirewallRule')
 
     # Variables to export from this module
     # VariablesToExport = '*'

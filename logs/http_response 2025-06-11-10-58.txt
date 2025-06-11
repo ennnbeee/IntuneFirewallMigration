@@ -1,0 +1,6 @@
+ 
+ 2025-06-11-10-58  
+ 
+v0.31-0 has been successfully imported to Intune
+  
+ System.Collections.Hashtable

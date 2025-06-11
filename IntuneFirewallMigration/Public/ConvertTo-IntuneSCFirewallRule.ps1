@@ -1,12 +1,16 @@
 function ConvertTo-IntuneSCFirewallRule {
     <#
     .SYNOPSIS
+    Convert Intune Endpoint Security policy object to Settings Catalog JSON format for firewall rules.
 
     .DESCRIPTION
+    This function converts an Intune Endpoint Security policy object to Settings Catalog JSON format for firewall rules.
 
     .EXAMPLE
+    ConvertTo-IntuneSCFirewallRule -incomingRules $rules
 
-    .PARAMETER incomingProfile a Intune Endpoint Security policy object to be processed and converted to Settings Catalog JSON
+    .PARAMETER incomingRules
+    An Intune Endpoint Security policy object to be processed and converted to Settings Catalog JSON
 
     .NOTES
 
@@ -29,13 +33,11 @@ function ConvertTo-IntuneSCFirewallRule {
     Begin {
         $scRules = @()
 
-
     }
 
     Process {
 
-        $fwRules =  $_ | ConvertFrom-Json | ConvertFrom-Json
-
+        $fwRules = $_ | ConvertFrom-Json | ConvertFrom-Json
         # Capturing existing rules with duplicate names, as Settings Catalog will not allow duplicates
         $duplicateRules = $fwRules | Group-Object -Property displayName | Where-Object { $_.count -gt 1 }
     }
