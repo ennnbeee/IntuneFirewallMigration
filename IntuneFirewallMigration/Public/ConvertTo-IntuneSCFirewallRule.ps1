@@ -66,6 +66,7 @@ function ConvertTo-IntuneSCFirewallRule {
             $ruleAction = $fwRule.action
             $ruleFWProfiles = $fwRule.profileTypes
             $rulePackageFamilyName = $fwRule.packageFamilyName
+            $ruleFilePath = $fwRule.filePath
             if ($null -ne $ruleFilePath) {
                 $ruleFilePath = $ruleFilePath.Replace('\', '\\')
             }

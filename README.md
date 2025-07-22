@@ -33,7 +33,9 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.3**
+- **v0.3.1**
+  - Resolved an issue with missing file paths on rules
+- v0.3
   - Able to upload only specific firewall profile rules from: domain, private, public, all, or not configured
   - Duplicate rule names now shown as (1), (2) etc.
   - Improved conversion of rules to Settings Catalog format
