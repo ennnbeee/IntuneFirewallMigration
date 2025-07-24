@@ -26,28 +26,26 @@ function Select-IntuneFirewallRule {
     #>
 
     [CmdletBinding()]
-    Param(
+    param(
 
         [Parameter(ValueFromPipeline = $true)]
         $incomingRules,
 
         [Parameter()]
-        [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+        [ValidateSet('all', 'domain', 'private', 'public')]
         $firewallProfile
 
     )
 
-    Begin {
+    begin {
         $fwRules = @()
         $updatedFWRules = @()
         $domainFWRules = @()
         $privateFWRules = @()
         $publicFWRules = @()
-        $notConfiguredFWRules = @()
-
     }
 
-    Process {
+    process {
 
         if ($incomingRules) {
             $fwRules += $incomingRules
@@ -58,106 +56,35 @@ function Select-IntuneFirewallRule {
 
     }
 
-    End {
-
-        foreach ($fwRule in $fwRules) {
-
-            if ($fwRule.profileTypes -contains 'domain') {
-                $domainFWRules += [PSCustomObject]@{
-                    'displayName'               = $fwRule.displayName
-                    'description'               = $fwRule.description
-                    'packageFamilyName'         = $fwRule.packageFamilyName
-                    'filePath'                  = $fwRule.filePath
-                    'serviceName'               = $fwRule.serviceName
-                    'protocol'                  = $fwRule.protocol
-                    'localPortRanges'           = $fwRule.localPortRanges
-                    'remotePortRanges'          = $fwRule.remotePortRanges
-                    'actualLocalAddressRanges'  = $fwRule.actualLocalAddressRanges
-                    'actualRemoteAddressRanges' = $fwRule.actualRemoteAddressRanges
-                    'profileTypes'              = @('domain')
-                    'action'                    = $fwRule.action
-                    'trafficDirection'          = $fwRule.trafficDirection
-                    'interfaceTypes'            = $fwRule.interfaceTypes
-                    'localUserAuthorizations'   = $fwRule.localUserAuthorizations
-                    'useAnyRemoteAddressRange'  = $fwRule.useAnyRemoteAddressRange
-                    'useAnyLocalAddressRange'  = $fwRule.useAnyLocalAddressRange
-                }
-            }
-            if ($fwRule.profileTypes -contains 'private') {
-                $privateFWRules += [PSCustomObject]@{
-                    'displayName'               = $fwRule.displayName
-                    'description'               = $fwRule.description
-                    'packageFamilyName'         = $fwRule.packageFamilyName
-                    'filePath'                  = $fwRule.filePath
-                    'serviceName'               = $fwRule.serviceName
-                    'protocol'                  = $fwRule.protocol
-                    'localPortRanges'           = $fwRule.localPortRanges
-                    'remotePortRanges'          = $fwRule.remotePortRanges
-                    'actualLocalAddressRanges'  = $fwRule.actualLocalAddressRanges
-                    'actualRemoteAddressRanges' = $fwRule.actualRemoteAddressRanges
-                    'profileTypes'              = @('private')
-                    'action'                    = $fwRule.action
-                    'trafficDirection'          = $fwRule.trafficDirection
-                    'interfaceTypes'            = $fwRule.interfaceTypes
-                    'localUserAuthorizations'   = $fwRule.localUserAuthorizations
-                    'useAnyRemoteAddressRange'  = $fwRule.useAnyRemoteAddressRange
-                    'useAnyLocalAddressRange'  = $fwRule.useAnyLocalAddressRange
-                }
-            }
-            if ($fwRule.profileTypes -contains 'public') {
-                $publicFWRules += [PSCustomObject]@{
-                    'displayName'               = $fwRule.displayName
-                    'description'               = $fwRule.description
-                    'packageFamilyName'         = $fwRule.packageFamilyName
-                    'filePath'                  = $fwRule.filePath
-                    'serviceName'               = $fwRule.serviceName
-                    'protocol'                  = $fwRule.protocol
-                    'localPortRanges'           = $fwRule.localPortRanges
-                    'remotePortRanges'          = $fwRule.remotePortRanges
-                    'actualLocalAddressRanges'  = $fwRule.actualLocalAddressRanges
-                    'actualRemoteAddressRanges' = $fwRule.actualRemoteAddressRanges
-                    'profileTypes'              = @('public')
-                    'action'                    = $fwRule.action
-                    'trafficDirection'          = $fwRule.trafficDirection
-                    'interfaceTypes'            = $fwRule.interfaceTypes
-                    'localUserAuthorizations'   = $fwRule.localUserAuthorizations
-                    'useAnyRemoteAddressRange'  = $fwRule.useAnyRemoteAddressRange
-                    'useAnyLocalAddressRange'  = $fwRule.useAnyLocalAddressRange
-                }
-            }
-            if ($fwRule.profileTypes -eq 'notConfigured') {
-                $notConfiguredFWRules += [PSCustomObject]@{
-                    'displayName'               = $fwRule.displayName
-                    'description'               = $fwRule.description
-                    'packageFamilyName'         = $fwRule.packageFamilyName
-                    'filePath'                  = $fwRule.filePath
-                    'serviceName'               = $fwRule.serviceName
-                    'protocol'                  = $fwRule.protocol
-                    'localPortRanges'           = $fwRule.localPortRanges
-                    'remotePortRanges'          = $fwRule.remotePortRanges
-                    'actualLocalAddressRanges'  = $fwRule.actualLocalAddressRanges
-                    'actualRemoteAddressRanges' = $fwRule.actualRemoteAddressRanges
-                    'profileTypes'              = $fwRule.profileTypes
-                    'action'                    = $fwRule.action
-                    'trafficDirection'          = $fwRule.trafficDirection
-                    'interfaceTypes'            = $fwRule.interfaceTypes
-                    'localUserAuthorizations'   = $fwRule.localUserAuthorizations
-                    'useAnyRemoteAddressRange'  = $fwRule.useAnyRemoteAddressRange
-                    'useAnyLocalAddressRange'  = $fwRule.useAnyLocalAddressRange
-                }
-            }
-
-        }
+    end {
 
         if ($firewallProfile) {
             switch ($firewallProfile) {
                 'domain' {
+                    foreach ($fwRule in $fwRules) {
+                        if ($fwRule.Profile -eq 'Domain' -or $fwRule.Profile -eq 'Any') {
+                            $fwRule.Profile = 'Domain'
+                            $domainFWRules += $fwRule
+                        }
+                    }
                     $updatedFWRules += $domainFWRules
                 }
                 'private' {
+                    foreach ($fwRule in $fwRules) {
+                        if ($fwRule.Profile -eq 'Private' -or $fwRule.Profile -eq 'Any') {
+                            $fwRule.Profile = 'Private'
+                            $privateFWRules += $fwRule
+                        }
+                    }
                     $updatedFWRules += $privateFWRules
                 }
                 'public' {
+                    foreach ($fwRule in $fwRules) {
+                        if ($fwRule.Profile -eq 'Public' -or $fwRule.Profile -eq 'Any') {
+                            $fwRule.Profile = 'Public'
+                            $publicFWRules += $fwRule
+                        }
+                    }
                     $updatedFWRules += $publicFWRules
                 }
                 'all' {

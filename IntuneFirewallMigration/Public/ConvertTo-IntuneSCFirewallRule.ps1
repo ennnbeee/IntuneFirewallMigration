@@ -61,7 +61,7 @@ function ConvertTo-IntuneSCFirewallRule {
             if ($null -ne $ruleName) {
                 $ruleName = $ruleName.Replace('\', '\\')
             }
-            $ruleDescription = $fwRule.description
+            $ruleDescription = $($fwRule.description) -replace ('[^A-Za-z0-9]', ' ')
             $ruleDirection = $fwRule.trafficDirection
             $ruleAction = $fwRule.action
             $ruleFWProfiles = $fwRule.profileTypes
