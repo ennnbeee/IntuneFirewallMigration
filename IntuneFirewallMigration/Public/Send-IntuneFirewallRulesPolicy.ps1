@@ -6,7 +6,7 @@
 # Sends Intune Firewall objects out to the Intune Powershell SDK
 # and returns the response to the API call
 
-Function Send-IntuneFirewallRulesPolicy {
+function Send-IntuneFirewallRulesPolicy {
     <#
     .SYNOPSIS
     Send firewall rule objects out to Intune
@@ -38,7 +38,7 @@ Function Send-IntuneFirewallRulesPolicy {
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
-    Param(
+    param(
         [Parameter(ValueFromPipeline = $true)]
         $firewallObjects,
 
@@ -51,19 +51,23 @@ Function Send-IntuneFirewallRulesPolicy {
         [int]$splitRules = 100,
 
         [Parameter()]
-        [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+        [ValidateSet('all', 'domain', 'private', 'public')]
         $firewallProfile,
+
+        [Parameter()]
+        [ValidateSet('inbound', 'outbound', 'both')]
+        [String]$ruleDirection,
 
         [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
         [ValidateNotNullOrEmpty()]
         [switch]$legacyProfile
     )
 
-    Begin { $firewallArr = @() }
+    begin { $firewallArr = @() }
 
     # We apply a filter that strips objects of their null attributes so that Graph can
     # apply default values in the absence of set values
-    Process {
+    process {
         $object = $_
         $allProperties = $_.PsObject.Properties.Name
         #$allProperties = ($object | Get-Member).Name
@@ -71,14 +75,14 @@ Function Send-IntuneFirewallRulesPolicy {
         $firewallArr += $object | Select-Object $nonNullProperties
     }
 
-    End {
+    end {
         # Split the incoming firewall objects into separate profiles
         $profiles = @()
         $currentProfile = @()
         $sentSuccessfully = @()
         $failedToSend = @()
-        ForEach ($firewall in $firewallArr) {
-            If ($currentProfile.Count -ge $splitRules) {
+        foreach ($firewall in $firewallArr) {
+            if ($currentProfile.Count -ge $splitRules) {
                 # Arrays may be "unrolled", so we need to enforce no unrolling
                 $profiles += , $currentProfile
                 $currentProfile = @()
@@ -86,7 +90,7 @@ Function Send-IntuneFirewallRulesPolicy {
             $currentProfile += $firewall
 
         }
-        If ($currentProfile.Count -gt 0 ) {
+        if ($currentProfile.Count -gt 0 ) {
             # Arrays may be "unrolled", so we need to enforce no unrolling
             $profiles += , $currentProfile
         }
@@ -101,7 +105,7 @@ Function Send-IntuneFirewallRulesPolicy {
             $item = New-Item './logs' -ItemType Directory
         }
 
-        ForEach ($profile in $profiles) {
+        foreach ($fwPolicy in $profiles) {
             # remainingProfiles is decremented after displaying operation status
             $remainingProfiles = Show-OperationProgress `
                 -remainingObjects $remainingProfiles `
@@ -111,8 +115,8 @@ Function Send-IntuneFirewallRulesPolicy {
             $textHeader = ''
             $NewIntuneObject = ''
             $profileAsString = '['
-            ForEach ($rules in $profile) {
-                if ($profile.IndexOf($rules) -eq $profile.Length - 1) {
+            foreach ($rules in $fwPolicy) {
+                if ($fwPolicy.IndexOf($rules) -eq $fwPolicy.Length - 1) {
                     $profileAsString += (ConvertTo-IntuneFirewallRuleString $rules) + ']'
                 }
                 else {
@@ -128,7 +132,7 @@ Function Send-IntuneFirewallRulesPolicy {
 
                 $NewIntuneObject = "{
                                         `"description`" : `"Migrated firewall profile created on $dateFormatted`",
-                                        `"displayName`" : `"$migratedProfileName-$firewallProfile-$profileNumber`",
+                                        `"displayName`" : `"$migratedProfileName-$firewallProfile-$ruleDirection-$profileNumber`",
                                         `"roleScopeTagIds`" :[],
                                         `"settingsDelta`" : [{
                                                             `"@odata.type`": `"#microsoft.graph.deviceManagementCollectionSettingInstance`",
@@ -144,7 +148,7 @@ Function Send-IntuneFirewallRulesPolicy {
                 $JSONPolicyStart = @"
                 {
                     "description": "Migrated firewall profile created on $dateFormatted",
-                    "name": "$migratedProfileName-$firewallProfile-$profileNumber",
+                    "name": "$migratedProfileName-$firewallProfile-$ruleDirection-$profileNumber",
                     "platforms": "windows10",
                     "technologies@odata.type": "#microsoft.graph.deviceManagementConfigurationTechnologies",
                     "technologies": "mdm,microsoftSense",
@@ -185,8 +189,8 @@ Function Send-IntuneFirewallRulesPolicy {
                 #$NewIntuneObject | Out-File "./logs/$migratedProfileName-$firewallProfile-$profileNumber.json"
             }
 
-            If ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
-                Try {
+            if ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {
+                try {
                     $successResponse = Invoke-MgGraphRequest -Method POST -Uri $uri -Body $NewIntuneObject
                     $successMessage = "`r`n$migratedProfileName-$profileNumber has been successfully imported to Intune`r`n"
 
@@ -195,14 +199,14 @@ Function Send-IntuneFirewallRulesPolicy {
                     Add-Content $responsePath "`r `n $dateFormatted `r `n $successMessage `r `n $successResponse"
 
                     $profileNumber++
-                    $sentSuccessfully += Get-ExcelFormatObject -intuneFirewallObjects $profile
+                    $sentSuccessfully += Get-ExcelFormatObject -intuneFirewallObjects $fwPolicy
 
                 }
-                Catch {
+                catch {
                     # Intune Graph errors are points that can detect payload mistakes
                     $errorMessage = $_.ToString()
                     #$errorType = $_.Exception.GetType().ToString()
-                    $failedToSend += Get-ExcelFormatObject -intuneFirewallObjects $profile -errorMessage $errorMessage
+                    $failedToSend += Get-ExcelFormatObject -intuneFirewallObjects $fwPolicy -errorMessage $errorMessage
 
                     Add-Content $responsePath "`r `n $dateFormatted `r `n $errorMessage"
                 }

@@ -33,7 +33,7 @@ function Export-NetFirewallRule {
     A stream of exported firewall rules represented via the intermediate IntuneFirewallRule class
     #>
     [CmdletBinding()]
-    Param(
+    param(
         #Defines the profile Name for the set of rules to be imported
         [Parameter(Mandatory = $true)]
         [String]
@@ -54,8 +54,12 @@ function Export-NetFirewallRule {
         [int]$splitRules = 100,
 
         [Parameter(HelpMessage = 'The rules from a specific firewall profile to be imported. The default value is all profiles.')]
-        [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+        [ValidateSet('all', 'domain', 'private', 'public')]
         [String]$firewallProfile = 'all',
+
+        [Parameter(HelpMessage = 'The direction of the firewall rules to be exported. The default value is both.')]
+        [ValidateSet('inbound', 'outbound', 'both')]
+        [String]$ruleDirection = 'both',
 
         [Parameter(HelpMessage = 'When set, the script will use the legacy Endpoint Security profile format.')]
         [ValidateNotNullOrEmpty()]
@@ -69,9 +73,10 @@ function Export-NetFirewallRule {
 
     # The default behaviour for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
-            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
+            Select-IntuneFirewallDirection -ruleDirection:$ruleDirection | `
             Select-IntuneFirewallRule -firewallProfile:$firewallProfile | `
-            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile
+            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
+            Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile -ruleDirection:$ruleDirection
     )
 
 }

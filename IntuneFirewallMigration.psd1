@@ -49,7 +49,7 @@
     # FunctionsToExport = 'Get-Function'
 
     # Cmdlets to export from this module
-    CmdletsToExport = @('Get-FirewallData', 'Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph', 'ConvertTo-IntuneSCFirewallRule', 'Select-IntuneFirewallRule')
+    CmdletsToExport = @('Get-FirewallData', 'Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule', 'Connect-ToGraph', 'ConvertTo-IntuneSCFirewallRule', 'Select-IntuneFirewallRule', 'Select-IntuneFirewallDirection')
 
     # Variables to export from this module
     # VariablesToExport = '*'

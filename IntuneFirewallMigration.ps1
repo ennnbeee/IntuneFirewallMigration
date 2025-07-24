@@ -14,8 +14,12 @@ param(
     [int]$splitRules = 100,
 
     [Parameter(HelpMessage = 'The rules from a specific firewall profile to be imported. The default value is all profiles.')]
-    [ValidateSet('all', 'domain', 'private', 'public', 'notConfigured')]
+    [ValidateSet('all', 'domain', 'private', 'public')]
     [String]$firewallProfile = 'all',
+
+    [Parameter(HelpMessage = 'The direction of the firewall rules to be exported. The default value is both.')]
+    [ValidateSet('inbound', 'outbound', 'both')]
+    [String]$ruleDirection = 'both',
 
     [Parameter(HelpMessage = 'Include Disabled Firewall Rules in the export')]
     [ValidateNotNullOrEmpty()]
@@ -65,7 +69,7 @@ if (Get-MgContext) {
 }
 
 ##scopes required for the script
-$requiredScopes = @('DeviceManagementManagedDevices.ReadWrite.All', 'DeviceManagementConfiguration.ReadWrite.All')
+$requiredScopes = @('DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
 
 
@@ -91,7 +95,7 @@ try {
 }
 catch {
     Write-Error $_.Exception.Message
-    Exit
+    exit
 }
 
 $currentScopes = $context.Scopes
@@ -163,7 +167,7 @@ try {
         $false { $policyStoreSource = 'GroupPolicy' }
     }
 
-    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile
+    Export-NetFirewallRule -ProfileName $profileName -EnabledOnly:$EnabledOnly -PolicyStoreSource:$policyStoreSource -Mode $mode -splitRules $splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile -ruleDirection:$ruleDirection
 }
 catch {
     $errorMessage = $_.ToString()

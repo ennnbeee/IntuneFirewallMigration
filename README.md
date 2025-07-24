@@ -8,6 +8,7 @@ This version is a streamlined version of the Microsoft tool with the following c
 
 - **Uses Settings Catalog firewall rule policies natively**
 - **Allows for selection of only specific firewall profile rules (Domain, Private, Public)**
+- **Support for importing only inbound or outbound rules**
 - Removed the reliance on the old Microsoft GitHub repository.
 - Changed to the `Microsoft.Graph.Authentication` PowerShell module.
 - Changed to `Invoke-MgGraphRequest` for calls to Graph.
@@ -33,7 +34,12 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.3.1**
+- **v0.4**
+  - Support for importing only inbound or outbound rules
+  - Support for non-english language Firewall rule descriptions
+  - Updated required Graph Permission scopes
+  - Re-order rule filtering for improved performance
+- v0.3.1
   - Resolved an issue with missing file paths on rules
 - v0.3
   - Able to upload only specific firewall profile rules from: domain, private, public, all, or not configured
@@ -53,7 +59,6 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 The PowerShell script requires the below Graph API permissions, you can create an Entra ID App Registration with the following Graph API Application permissions:
 
 - `DeviceManagementConfiguration.ReadWrite.All`
-- `DeviceManagementManagedDevices.ReadWrite.All`
 
 The script can then be authenticated by passing in the App Registration details:
 
@@ -83,6 +88,22 @@ Creates **Settings Catalog** Firewall rule profiles with the name prefix `Firewa
 
 ```powershell
 .\IntuneFirewallMigration.ps1 -profileName FirewallRules
+```
+
+### ⬅ Inbound Rules
+
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `InboundFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules, only uploading **inbound** profile rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName InboundFirewallRules -ruleDirection inbound
+```
+
+### ➡ Outbound Rules
+
+Creates **Settings Catalog** Firewall rule profiles with the name prefix `OutboundFirewallRules` with **100** rules per profile, using all **enabled** **Group Policy** applied firewall rules, only uploading **outbound** profile rules:
+
+```powershell
+.\IntuneFirewallMigration.ps1 -profileName OutboundFirewallRules -ruleDirection outbound
 ```
 
 ### 🏢 Domain Profile Rules
