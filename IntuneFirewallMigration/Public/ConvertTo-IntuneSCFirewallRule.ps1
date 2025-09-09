@@ -23,26 +23,26 @@ function ConvertTo-IntuneSCFirewallRule {
     #>
 
     [CmdletBinding()]
-    Param(
+    param(
 
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         $incomingRules
 
     )
 
-    Begin {
+    begin {
         $scRules = @()
 
     }
 
-    Process {
+    process {
 
         $fwRules = $_ | ConvertFrom-Json | ConvertFrom-Json
         # Capturing existing rules with duplicate names, as Settings Catalog will not allow duplicates
         $duplicateRules = $fwRules | Group-Object -Property displayName | Where-Object { $_.count -gt 1 }
     }
 
-    End {
+    end {
         foreach ($fwRule in $fwRules) {
 
             # Blank Out variables as not all rules have each variable
@@ -201,13 +201,25 @@ function ConvertTo-IntuneSCFirewallRule {
 '@
                     $JSONLocalAddresses = @()
                     foreach ($ruleLocalAddress in $ruleLocalAddresses) {
+                        # address conversion
+                        if ($ruleLocalAddress -like '*/*') {
+                            $ruleLocalAddressMask = $($ruleLocalAddress.Split('/')[1])
+                            # Convert the numbers into 8 bit blocks, join them all together, count the 1s
+                            $ruleLocalAddressOctets = $ruleLocalAddressMask.Split('.') | ForEach-Object { [Convert]::ToString($_, 2) }
+                            $ruleLocalAddressCIDR = ($ruleLocalAddressOctets -join '').TrimEnd('0').Length
+                            $ruleLocalAddressUpdate = "$($ruleLocalAddress.Split('/')[0])/$ruleLocalAddressCIDR"
+
+                        }
+                        else {
+                            $ruleLocalAddressUpdate = $ruleLocalAddress
+                        }
                         # Last address in the set
                         if (($ruleLocalAddress -eq $ruleLocalAddresses[-1]) -or ($ruleLocalAddresses.count -eq '1')) {
                             $JSONRuleLocalAddress = @"
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleLocalAddress"
+                    "value": "$ruleLocalAddressUpdate"
                 }
 
 "@
@@ -217,7 +229,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleLocalAddress"
+                    "value": "$ruleLocalAddressUpdate"
                 },
 
 "@
@@ -259,7 +271,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 }
 
                 # Package Family Name
-                If (!([string]::IsNullOrEmpty($rulePackageFamilyName))) {
+                if (!([string]::IsNullOrEmpty($rulePackageFamilyName))) {
                     $JSONRulePackageFamily = @"
         {
             "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
@@ -417,7 +429,7 @@ function ConvertTo-IntuneSCFirewallRule {
 
                     $JSONRuleFWProfileTypes = @()
                     foreach ($ruleFWProfile in $ruleFWProfiles) {
-                        Switch ($ruleFWProfile) {
+                        switch ($ruleFWProfile) {
                             'domain' { $ruleFWProfileNo = '1' }
                             'private' { $ruleFWProfileNo = '2' }
                             'public' { $ruleFWProfileNo = '4' }
@@ -548,13 +560,25 @@ function ConvertTo-IntuneSCFirewallRule {
 '@
                     $JSONRemoteAddresses = @()
                     foreach ($ruleRemoteAddress in $ruleRemoteAddresses) {
+                        # address conversion
+                        if ($ruleRemoteAddress -like '*/*') {
+                            $ruleRemoteAddressMask = $($ruleRemoteAddress.Split('/')[1])
+                            # Convert the numbers into 8 bit blocks, join them all together, count the 1s
+                            $ruleRemoteAddressOctets = $ruleRemoteAddressMask.Split('.') | ForEach-Object { [Convert]::ToString($_, 2) }
+                            $ruleRemoteAddressCIDR = ($ruleRemoteAddressOctets -join '').TrimEnd('0').Length
+                            $ruleRemoteAddressUpdate = "$($ruleRemoteAddress.Split('/')[0])/$ruleRemoteAddressCIDR"
+
+                        }
+                        else {
+                            $ruleRemoteAddressUpdate = $ruleRemoteAddress
+                        }
                         # Last address in the set
                         if (($ruleRemoteAddress -eq $ruleRemoteAddresses[-1]) -or ($ruleRemoteAddresses.count -eq '1')) {
                             $JSONRuleRemoteAddress = @"
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleRemoteAddress"
+                    "value": "$ruleRemoteAddressUpdate"
                 }
 
 "@
@@ -564,7 +588,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleRemoteAddress"
+                    "value": "$ruleRemoteAddressUpdate"
                 },
 
 "@
@@ -581,7 +605,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 }
 
                 # Rule Action
-                Switch ($ruleAction) {
+                switch ($ruleAction) {
                     'allowed' { $ruleActionType = '1' }
                     'blocked' { $ruleActionType = '0' }
                 }
@@ -731,13 +755,25 @@ function ConvertTo-IntuneSCFirewallRule {
 '@
                     $JSONLocalAddresses = @()
                     foreach ($ruleLocalAddress in $ruleLocalAddresses) {
+                        # address conversion
+                        if ($ruleLocalAddress -like '*/*') {
+                            $ruleLocalAddressMask = $($ruleLocalAddress.Split('/')[1])
+                            # Convert the numbers into 8 bit blocks, join them all together, count the 1s
+                            $ruleLocalAddressOctets = $ruleLocalAddressMask.Split('.') | ForEach-Object { [Convert]::ToString($_, 2) }
+                            $ruleLocalAddressCIDR = ($ruleLocalAddressOctets -join '').TrimEnd('0').Length
+                            $ruleLocalAddressUpdate = "$($ruleLocalAddress.Split('/')[0])/$ruleLocalAddressCIDR"
+
+                        }
+                        else {
+                            $ruleLocalAddressUpdate = $ruleLocalAddress
+                        }
                         # Last address in the set
                         if (($ruleLocalAddress -eq $ruleLocalAddresses[-1]) -or ($ruleLocalAddresses.count -eq '1')) {
                             $JSONRuleLocalAddress = @"
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleLocalAddress"
+                    "value": "$ruleLocalAddressUpdate"
                 }
 
 "@
@@ -747,7 +783,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleLocalAddress"
+                    "value": "$ruleLocalAddressUpdate"
                 },
 
 "@
@@ -785,7 +821,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 }
 
                 # Package Family Name
-                If (!([string]::IsNullOrEmpty($rulePackageFamilyName))) {
+                if (!([string]::IsNullOrEmpty($rulePackageFamilyName))) {
                     $JSONRulePackageFamily = @"
         {
             "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
@@ -921,7 +957,7 @@ function ConvertTo-IntuneSCFirewallRule {
 
                     $JSONRuleFWProfileTypes = @()
                     foreach ($ruleFWProfile in $ruleFWProfiles) {
-                        Switch ($ruleFWProfile) {
+                        switch ($ruleFWProfile) {
                             'domain' { $ruleFWProfileNo = '1' }
                             'private' { $ruleFWProfileNo = '2' }
                             'public' { $ruleFWProfileNo = '4' }
@@ -1038,13 +1074,25 @@ function ConvertTo-IntuneSCFirewallRule {
 '@
                     $JSONRemoteAddresses = @()
                     foreach ($ruleRemoteAddress in $ruleRemoteAddresses) {
+                        # address conversion
+                        if ($ruleRemoteAddress -like '*/*') {
+                            $ruleRemoteAddressMask = $($ruleRemoteAddress.Split('/')[1])
+                            # Convert the numbers into 8 bit blocks, join them all together, count the 1s
+                            $ruleRemoteAddressOctets = $ruleRemoteAddressMask.Split('.') | ForEach-Object { [Convert]::ToString($_, 2) }
+                            $ruleRemoteAddressCIDR = ($ruleRemoteAddressOctets -join '').TrimEnd('0').Length
+                            $ruleRemoteAddressUpdate = "$($ruleRemoteAddress.Split('/')[0])/$ruleRemoteAddressCIDR"
+
+                        }
+                        else {
+                            $ruleRemoteAddressUpdate = $ruleRemoteAddress
+                        }
                         # Last address in the set
                         if (($ruleRemoteAddress -eq $ruleRemoteAddresses[-1]) -or ($ruleRemoteAddresses.count -eq '1')) {
                             $JSONRuleRemoteAddress = @"
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleRemoteAddress"
+                    "value": "$ruleRemoteAddressUpdate"
                 }
 
 "@
@@ -1054,7 +1102,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 {
                     "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
                     "settingValueTemplateReference": null,
-                    "value": "$ruleRemoteAddress"
+                    "value": "$ruleRemoteAddressUpdate"
                 },
 
 "@
@@ -1070,7 +1118,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 }
 
                 # Rule Action
-                Switch ($ruleAction) {
+                switch ($ruleAction) {
                     'allowed' { $ruleActionType = '1' }
                     'blocked' { $ruleActionType = '0' }
                 }
