@@ -124,7 +124,8 @@ function Send-IntuneFirewallRulesPolicy {
                 }
             }
             $profileJson = $profileAsString | ConvertTo-Json
-            #$profileJson | Out-File "./logs/$migratedProfileName-$firewallProfile-$profileNumber.json"
+            #testing
+            #$profileJson | Out-File "./logs/legacy-$migratedProfileName-$firewallProfile-$profileNumber.json"
             if ($legacyProfile) {
                 $textHeader = 'Endpoint Security Payload'
                 $uri = 'https://graph.microsoft.com/beta/deviceManagement/templates/4356d05c-a4ab-4a07-9ece-739f7c792910/createInstance'
@@ -186,7 +187,8 @@ function Send-IntuneFirewallRulesPolicy {
                 $scJSONAllRules = $profileJson | ConvertTo-IntuneSCFirewallRule
                 $NewIntuneObject = $JSONPolicyStart + $scJSONAllRules + $JSONPolicyEnd
                 Test-JSONData -JSON $NewIntuneObject
-                #$NewIntuneObject | Out-File "./logs/$migratedProfileName-$firewallProfile-$profileNumber.json"
+                #testing
+                #$NewIntuneObject | Out-File "./logs/settingscatalog-$migratedProfileName-$firewallProfile-$profileNumber.json"
             }
 
             if ($PSCmdlet.ShouldProcess($NewIntuneObject, $Strings.SendIntuneFirewallRulesPolicyShouldSendData)) {

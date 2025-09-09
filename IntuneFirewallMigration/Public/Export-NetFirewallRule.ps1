@@ -67,7 +67,7 @@ function Export-NetFirewallRule {
 
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will not automatically be processed and split and the users will be prompted users to split
-        [switch] $doNotsplitConflictingAttributes
+        [switch] $doNotSplitConflictingAttributes
 
     )
 
@@ -75,7 +75,7 @@ function Export-NetFirewallRule {
     return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource | `
             Select-IntuneFirewallDirection -ruleDirection:$ruleDirection | `
             Select-IntuneFirewallRule -firewallProfile:$firewallProfile | `
-            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes | `
+            ConvertTo-IntuneFirewallRule -doNotsplitConflictingAttributes:$doNotSplitConflictingAttributes | `
             Send-IntuneFirewallRulesPolicy -migratedProfileName:$ProfileName -splitRules:$splitRules -legacyProfile:$legacyProfile -firewallProfile:$firewallProfile -ruleDirection:$ruleDirection
     )
 

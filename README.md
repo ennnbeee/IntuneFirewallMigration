@@ -34,24 +34,26 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.4**
+- **v0.4.1**
+  - Resolved issues with rules containing local and remote address ranges.
+- v0.4.0
   - Support for importing only inbound or outbound rules
   - Support for non-english language Firewall rule descriptions
   - Updated required Graph Permission scopes
   - Re-order rule filtering for improved performance
 - v0.3.1
   - Resolved an issue with missing file paths on rules
-- v0.3
+- v0.3.0
   - Able to upload only specific firewall profile rules from: domain, private, public, all, or not configured
   - Duplicate rule names now shown as (1), (2) etc.
   - Improved conversion of rules to Settings Catalog format
 - v0.2.1
   - Ensures only unique firewall rules are created in Settings Catalog policies
   - Improved duplicate firewall name handling
-- v0.2
+- v0.2.0
   - Creates Setting Catalog policies as standard
   - Allows for creation of legacy Endpoint Security policies using the `legacyProfile` switch
-- v0.1
+- v0.1.0
   - Initial release
 
 ## 🔑 Permissions

@@ -1,3 +1,76 @@
+<#PSScriptInfo
+
+.VERSION 0.4.1
+.GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
+.AUTHOR Nick Benton
+.COMPANYNAME odds+endpoints
+.COPYRIGHT MIT
+.TAGS Graph Intune Windows Firewall
+.LICENSEURI https://github.com/ennnbeee/IntuneFirewallMigration/blob/main/LICENSE
+.PROJECTURI https://github.com/ennnbeee/IntuneFirewallMigration
+.ICONURI https://raw.githubusercontent.com/ennnbeee/IntuneFirewallMigration/refs/heads/main/img/ifm-icon.png
+.EXTERNALMODULEDEPENDENCIES Microsoft.Graph.Authentication
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES
+v0.4.1 - Bug fixes for local address range rules
+v0.4.0 - Allow import of only inbound or outbound rules, support for non-english language rule descriptions, updated Graph Scopes, performance improvements
+v0.3.1 - Resolved an issue with missing file paths on rules
+v0.3.0 - Able to upload only specific firewall profile rules from: domain, private, public, all, or not configured
+v0.2.1 - Ensures only unique firewall rules are created in Settings Catalog policies
+v0.2.0 - Creates Setting Catalog policies as standard, allows for creation of legacy Endpoint Security policies using the legacyProfile switch
+v0.1.0 - Initial release
+
+.PRIVATEDATA
+#>
+
+<#
+.SYNOPSIS
+This script allows for creation of Windows Firewall rules within Microsoft Intune from a source machine.
+
+.DESCRIPTION
+The IntuneFirewallMigration script is a PowerShell tool designed to facilitate the migration of Windows Firewall rules within Microsoft Intune.
+It provides an interactive interface for administrators to select rules, define migration parameters, and apply these settings across user and device groups efficiently.
+
+.PARAMETER profileName
+The name of the firewall rule profile to be created.
+
+.PARAMETER mode
+This determines if we are running a test version or a full importation. The default value is full. The test version imports only 20 rules.
+
+.PARAMETER splitRules
+The number of rules per profiles to be exported. The default value is 100 rules per profile.
+
+.PARAMETER firewallProfile
+The rules from a specific firewall profile type to be imported. The default value is all profiles from the options of domain, private, public, all.
+
+.PARAMETER ruleDirection
+Selection of whether to import only inbound or outbound rules, default is both from the options of inbound, outbound, both.
+
+.PARAMETER includeDisabledRules
+Include Disabled Firewall Rules in the export.
+
+.PARAMETER includeLocalRules
+Include Local Firewall Rules in the export.
+
+.PARAMETER legacyProfile
+When set, the script will use the legacy Endpoint Security profile format.
+
+.PARAMETER tenantId
+Provide the Id of the Entra ID tenant to connect to.
+
+.PARAMETER appId
+Provide the Id of the Entra App registration to be used for authentication.
+
+.PARAMETER appSecret
+Provide the App secret to allow for authentication to graph
+
+.EXAMPLE
+Interactive Authentication
+.\IntuneFirewallMigration.ps1 -profileName 'MyFirewallProfile' -firewallProfile 'domain' -ruleDirection 'inbound'
+
+#>
+
 [CmdletBinding()]
 
 param(
