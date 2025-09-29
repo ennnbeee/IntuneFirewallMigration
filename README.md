@@ -34,7 +34,7 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 ## 🔄 Updates
 
-- **v0.4.2*
+- **v0.4.2**
   - Better error handling
   - Improved support for German Language rules
 - v0.4.1
