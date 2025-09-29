@@ -54,7 +54,6 @@ function Show-OperationProgress {
     # Since this represents a single operation, we decrement the remaining objects to work once.
     return $remainingObjects - 1
 }
-
 function Get-UserPrompt {
     <#
     .SYNOPSIS
@@ -95,7 +94,6 @@ function Get-UserPrompt {
     )
     return $host.ui.PromptForChoice($promptTitle, $promptMessage, $promptOptions, $defaultOption)
 }
-
 Function Test-JSONData() {
 
     param (
@@ -109,15 +107,14 @@ Function Test-JSONData() {
     }
     catch {
         $validJson = $false
-        $_.Exception
-    }
-    if (!$validJson) {
-        Write-Host "Provided JSON isn't in valid JSON format" -f Red
+        Write-Error $_.Exception.Message
         break
     }
-
+    if (!$validJson) {
+        Write-Error $_.Exception.Message
+        break
+    }
 }
-
 Function Connect-ToGraph {
 
     <#
@@ -169,14 +166,14 @@ Function Connect-ToGraph {
 
             if ($version -eq 2) {
                 Write-Host 'Version 2 module detected'
-                $accesstokenfinal = ConvertTo-SecureString -String $accessToken -AsPlainText -Force
+                $accessTokenFinal = ConvertTo-SecureString -String $accessToken -AsPlainText -Force
             }
             else {
                 Write-Host 'Version 1 Module Detected'
                 Select-MgProfile -Name Beta
-                $accesstokenfinal = $accessToken
+                $accessTokenFinal = $accessToken
             }
-            $graph = Connect-MgGraph -AccessToken $accesstokenfinal
+            $graph = Connect-MgGraph -AccessToken $accessTokenFinal
             Write-Host "Connected to Intune tenant $TenantId using app-based authentication (Azure AD authentication not supported)"
         }
         else {

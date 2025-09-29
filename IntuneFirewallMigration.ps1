@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 0.4.1
+.VERSION 0.4.2
 .GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
 .AUTHOR Nick Benton
 .COMPANYNAME odds+endpoints
@@ -13,6 +13,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+v0.4.2 - Improved error handling and better support for German rules
 v0.4.1 - Bug fixes for local address range rules
 v0.4.0 - Allow import of only inbound or outbound rules, support for non-english language rule descriptions, updated Graph Scopes, performance improvements
 v0.3.1 - Resolved an issue with missing file paths on rules
@@ -145,7 +146,6 @@ if (Get-MgContext) {
 $requiredScopes = @('DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
 
-
 ## authentication
 try {
     if (!$tenantId) {
@@ -163,8 +163,7 @@ try {
         }
     }
     $context = Get-MgContext
-    Write-Host ''
-    Write-Host "Successfully connected to Microsoft Graph Tenant ID $($context.TenantId)." -ForegroundColor Green
+    Write-Host "`nSuccessfully connected to Microsoft Graph Tenant ID $($context.TenantId)." -ForegroundColor Green
 }
 catch {
     Write-Error $_.Exception.Message
@@ -177,12 +176,12 @@ $missingScopes = $requiredScopes | Where-Object { $_ -notin $currentScopes }
 if ($missingScopes.Count -gt 0) {
     Write-Host 'WARNING: The following scope permissions are missing:' -ForegroundColor Red
     $missingScopes | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
-    Write-Host ''
-    Write-Host 'Please ensure these permissions are granted to the app registration for full functionality.' -ForegroundColor Yellow
+    Write-Host "`nPlease ensure these permissions are granted to the app registration for full functionality." -ForegroundColor Yellow
     exit
 }
-Write-Host ''
-Write-Host 'All required scope permissions are present.' -ForegroundColor Green
+else {
+    Write-Host "`nAll required scope permissions are present." -ForegroundColor Green
+}
 #endregion authentication
 
 #region script

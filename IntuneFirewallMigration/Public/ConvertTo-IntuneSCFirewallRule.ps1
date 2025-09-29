@@ -59,7 +59,7 @@ function ConvertTo-IntuneSCFirewallRule {
                 }
             }
             if ($null -ne $ruleName) {
-                $ruleName = $ruleName.Replace('\', '\\')
+                $ruleName = $ruleName.Replace('\', '\\') -replace ('"', ' ') # removes characters that break JSON format
             }
             $ruleDescription = $($fwRule.description) -replace ('[^A-Za-z0-9]', ' ')
             $ruleDirection = $fwRule.trafficDirection
@@ -1176,7 +1176,5 @@ function ConvertTo-IntuneSCFirewallRule {
         }
 
         return $scRules
-
     }
-
 }
