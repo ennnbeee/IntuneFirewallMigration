@@ -16,7 +16,7 @@ This version is a streamlined version of the Microsoft tool with the following c
 - Fixed issues when checking for profile name matching when there are no existing firewall rule policies.
 - Resolved issues with module `Microsoft.Graph` version 2.26.1 module on PowerShell 5.
 
-## MEM Official Community Tool
+## 🏅 MEM Official Community Tool
 
 This script has been recognised as part of the [MEM Official Community Tools](https://www.memcommunity.com/official-community-tool-oct) and was carefully reviewed by a panel of industry experts.
 
