@@ -1,6 +1,6 @@
 # 🔥🧱🪄 IntuneFirewallMigration
 
-IntuneFirewallMigration is an updated version of the no longer available [Microsoft tool](https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-rule-tool) which was removed in June 2024:
+IntuneFirewallMigration is an updated version of the no longer available [Microsoft tool](https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-rule-tool) which was removed in June 2024 to support migration Group Policy and local firewall rules to Intune.
 
 ![Firewall Migration Tool](/img/mstool.png)
 
@@ -15,6 +15,12 @@ This version is a streamlined version of the Microsoft tool with the following c
 - Disabled and removed all telemetry functions and calls.
 - Fixed issues when checking for profile name matching when there are no existing firewall rule policies.
 - Resolved issues with module `Microsoft.Graph` version 2.26.1 module on PowerShell 5.
+
+## MEM Official Community Tool
+
+This script has been recognised as part of the [MEM Official Community Tools](https://www.memcommunity.com/official-community-tool-oct) and was carefully reviewed by a panel of industry experts.
+
+This solution was evaluated based on technical value, originality, usefulness, and impact on the Endpoint Management ecosystem.
 
 ## ⚠ Public Preview Notice
 
