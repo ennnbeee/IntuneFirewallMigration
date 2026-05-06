@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 0.4.2
+.VERSION 0.4.3
 .GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
 .AUTHOR Nick Benton
 .COMPANYNAME odds+endpoints
@@ -13,6 +13,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+v0.4.3 - Minor changes
 v0.4.2 - Improved error handling and better support for German rules
 v0.4.1 - Bug fixes for local address range rules
 v0.4.0 - Allow import of only inbound or outbound rules, support for non-english language rule descriptions, updated Graph Scopes, performance improvements
@@ -134,7 +135,29 @@ if (!$principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 ## check for running from correct folder location
 Import-Module '.\IntuneFirewallMigration.psm1' -Force
 Import-Module '.\IntuneFirewallMigration\Private\Strings.ps1' -Force
-#endregion preflight
+#endregion
+
+#region intro
+Clear-Host
+Write-Host '
+░▀█▀░█▀█░▀█▀░█░█░█▀█░█▀▀
+░░█░░█░█░░█░░█░█░█░█░█▀▀
+░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀░▀▀▀' -ForegroundColor Cyan
+Write-Host '
+░█▀▀░▀█▀░█▀▄░█▀▀░█░█░█▀█░█░░░█░░
+░█▀▀░░█░░█▀▄░█▀▀░█▄█░█▀█░█░░░█░░
+░▀░░░▀▀▀░▀░▀░▀▀▀░▀░▀░▀░▀░▀▀▀░▀▀▀ ' -ForegroundColor Red
+Write-Host '
+░█▄█░▀█▀░█▀▀░█▀▄░█▀█░▀█▀░▀█▀░█▀█░█▀█
+░█░█░░█░░█░█░█▀▄░█▀█░░█░░░█░░█░█░█░█
+░▀░▀░▀▀▀░▀▀▀░▀░▀░▀░▀░░▀░░▀▀▀░▀▀▀░▀░▀' -ForegroundColor DarkRed
+
+Write-Host "`nIntuneFirewallMigration - Migrate Group Policy applied firewall rules to Microsoft Intune." -ForegroundColor Green
+Write-Host "`nNick Benton - oddsandendpoints.co.uk" -NoNewline;
+Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.3 Public Preview' -ForegroundColor Yellow -NoNewline
+Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-05-06' -ForegroundColor Magenta
+Write-Host "`nIf you have any feedback, open an issue at https://github.com/ennnbeee/IntuneFirewallMigration/issues" -ForegroundColor Cyan
+#endregion
 
 #region authentication
 if (Get-MgContext) {
@@ -182,7 +205,7 @@ if ($missingScopes.Count -gt 0) {
 else {
     Write-Host "`nAll required scope permissions are present." -ForegroundColor Green
 }
-#endregion authentication
+#endregion
 
 #region script
 try {
@@ -246,4 +269,4 @@ catch {
     Write-Host -ForegroundColor Red $errorMessage
     Write-Host 'No commands completed'
 }
-#endregion script
+#endregion
