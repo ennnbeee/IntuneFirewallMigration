@@ -99,10 +99,11 @@ function Send-IntuneFirewallRulesPolicy {
         $remainingProfiles = $profiles.Count
 
         $dateFormatted = Get-Date -Format 'yyyy-MM-dd-HH-mm'
-        $responsePath = './logs/http_response ' + $dateFormatted + '.txt'
-        $payloadPath = './logs/http_payload ' + $dateFormatted + '.txt'
-        if (-not(Test-Path './logs')) {
-            $item = New-Item './logs' -ItemType Directory
+        $logPath = Split-Path $(Split-Path $PSScriptRoot)
+        $responsePath = "$logPath\logs\http_response_$dateFormatted.txt"
+        $payloadPath = "$logPath\logs\http_payload_$dateFormatted.txt"
+        if (-not(Test-Path "$logPath\logs")) {
+            $item = New-Item "$logPath\logs" -ItemType Directory
         }
 
         foreach ($fwPolicy in $profiles) {

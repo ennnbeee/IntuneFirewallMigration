@@ -33,14 +33,17 @@ IntuneFirewallMigration is currently in Public Preview, meaning that although it
 
 > [!IMPORTANT]
 >
-> - Supports PowerShell 5 and 7 on Windows
+> - Supports PowerShell 5 on Windows
 > - `Microsoft.Graph.Authentication` the script will detect and install if required.
 > - `ImportExcel` the script will detect and install if required.
 > - Entra ID App Registration with appropriate Graph Scopes or using Interactive Sign-In with a privileged account.
 
 ## 🔄 Updates
 
-- **v0.4.2**
+- **v0.4.5**
+  - Resolved issues with modules loading
+  - Dropped support for PowerShell 7 due to requirement for `Appx` module.
+- v0.4.2
   - Better error handling
   - Improved support for German Language rules
 - v0.4.1

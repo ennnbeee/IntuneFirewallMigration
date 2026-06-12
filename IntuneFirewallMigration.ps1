@@ -1,6 +1,7 @@
+#Requires -Version 5
 <#PSScriptInfo
 
-.VERSION 0.4.3
+.VERSION 0.4.5
 .GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
 .AUTHOR Nick Benton
 .COMPANYNAME odds+endpoints
@@ -13,6 +14,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+v0.4.5 - Resolved issues with modules loading
 v0.4.3 - Minor changes
 v0.4.2 - Improved error handling and better support for German rules
 v0.4.1 - Bug fixes for local address range rules
@@ -132,30 +134,40 @@ if (!$principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     return
 }
 
+if ($PSVersionTable.PSVersion.Major -gt 5) {
+    Write-host "Warning: Running PowerShell version $($PSVersionTable.PSVersion). This script will be launched in PowerShell 5" -ForegroundColor Yellow
+    powershell -v 5 $PSCommandPath
+    exit
+}
+
+$pathToScript = if ( $PSScriptRoot ) {
+    # Console or vscode debug/run button/F5 temp console
+    $PSScriptRoot
+}
+else {
+    if ( $psISE ) { Split-Path -Path $psISE.CurrentFile.FullPath }
+    else {
+        if ($profile -match 'VScode') {
+            # vscode "Run Code Selection" button/F8 in integrated console
+            Split-Path $psEditor.GetEditorContext().CurrentFile.Path
+        }
+        else {
+            Write-Output 'unknown directory to set path variable. exiting script.'
+            exit 0
+        }
+    }
+}
+
 ## check for running from correct folder location
-Import-Module '.\IntuneFirewallMigration.psm1' -Force
-Import-Module '.\IntuneFirewallMigration\Private\Strings.ps1' -Force
+Import-Module "$pathToScript\IntuneFirewallMigration.psm1" -Force
+Import-Module "$pathToScript\IntuneFirewallMigration\Private\Strings.ps1" -Force
 #endregion
 
 #region intro
-Clear-Host
-Write-Host '
-░▀█▀░█▀█░▀█▀░█░█░█▀█░█▀▀
-░░█░░█░█░░█░░█░█░█░█░█▀▀
-░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀░▀▀▀' -ForegroundColor Cyan
-Write-Host '
-░█▀▀░▀█▀░█▀▄░█▀▀░█░█░█▀█░█░░░█░░
-░█▀▀░░█░░█▀▄░█▀▀░█▄█░█▀█░█░░░█░░
-░▀░░░▀▀▀░▀░▀░▀▀▀░▀░▀░▀░▀░▀▀▀░▀▀▀ ' -ForegroundColor Red
-Write-Host '
-░█▄█░▀█▀░█▀▀░█▀▄░█▀█░▀█▀░▀█▀░█▀█░█▀█
-░█░█░░█░░█░█░█▀▄░█▀█░░█░░░█░░█░█░█░█
-░▀░▀░▀▀▀░▀▀▀░▀░▀░▀░▀░░▀░░▀▀▀░▀▀▀░▀░▀' -ForegroundColor DarkRed
-
-Write-Host "`nIntuneFirewallMigration - Migrate Group Policy applied firewall rules to Microsoft Intune." -ForegroundColor Green
+Write-Host "`nIntuneFirewallMigration - Migrate Group Policy applied Windows firewall rules to Microsoft Intune." -ForegroundColor Green
 Write-Host "`nNick Benton - oddsandendpoints.co.uk" -NoNewline;
-Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.3 Public Preview' -ForegroundColor Yellow -NoNewline
-Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-05-06' -ForegroundColor Magenta
+Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.5 Public Preview' -ForegroundColor Yellow -NoNewline
+Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-06-12' -ForegroundColor Magenta
 Write-Host "`nIf you have any feedback, open an issue at https://github.com/ennnbeee/IntuneFirewallMigration/issues" -ForegroundColor Cyan
 #endregion
 
@@ -213,7 +225,7 @@ try {
         $uri = 'https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27'
     }
     else {
-        $uri = "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?`$filter=technologies has 'MicrosoftSense'"
+        $uri = 'https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?$filter=technologies has ''microsoftSense'''
     }
     $graphResults = Invoke-MgGraphRequest -Method GET -Uri $uri -OutputType PSObject
     $results = @()

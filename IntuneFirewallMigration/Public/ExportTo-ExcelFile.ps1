@@ -92,13 +92,14 @@ function Export-ExcelFile {
         $failedToSend,
         $failedToConvert
     )
+    $logPath = Split-Path $(Split-Path $PSScriptRoot)
     $i = 0
     $date = Get-Date -Format 'yyy_MM_dd_HH_mm'
-    $path = '.\logs\' + $fileName + '_' + $i + ' ' + $date + '.xlsx'
+    $path = "$logPath\logs\$fileName" + '_' + $i + ' ' + $date + '.xlsx'
 
     while (Test-Path $path) {
         $i++
-        $path = '.\logs\' + $fileName + '_' + $i + ' ' + $date + '.xlsx'
+        $path = "$logPath\logs\$fileName" + '_' + $i + ' ' + $date + '.xlsx'
 
     }
 
@@ -123,8 +124,8 @@ function Get-SummaryDetail {
     else {
         Write-Host 'Imported ' $SummaryDetails.NumberofSucceededSent '/' $SummaryDetails.NumberofSplitRules "into the Endpoint Security Firewall Rule Profile '"$SummaryDetails.ProfileName"'"
     }
-    if (Test-Path '.\logs') {
-        Write-Host 'See logs :' (Resolve-Path '.\logs') "for more information`r"
+    if (Test-Path "$logPath\logs") {
+        Write-Host 'See logs :' (Resolve-Path "$logPath\logs") "for more information`r"
     }
 }
 
