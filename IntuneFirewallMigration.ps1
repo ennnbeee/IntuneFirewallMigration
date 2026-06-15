@@ -1,7 +1,7 @@
 #Requires -Version 5
 <#PSScriptInfo
 
-.VERSION 0.4.5
+.VERSION 0.4.6
 .GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
 .AUTHOR Nick Benton
 .COMPANYNAME odds+endpoints
@@ -14,6 +14,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+v0.4.6 - Included module dependencies in PSScriptInfo
 v0.4.5 - Resolved issues with modules loading
 v0.4.3 - Minor changes
 v0.4.2 - Improved error handling and better support for German rules
@@ -135,8 +136,18 @@ if (!$principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 }
 
 if ($PSVersionTable.PSVersion.Major -gt 5) {
-    Write-host "Warning: Running PowerShell version $($PSVersionTable.PSVersion). This script will be launched in PowerShell 5" -ForegroundColor Yellow
-    powershell -v 5 $PSCommandPath
+    Write-Host "Warning: Running PowerShell version $($PSVersionTable.PSVersion). This script will be launched in PowerShell 5" -ForegroundColor Yellow
+    $boundParams = $PSBoundParameters.GetEnumerator() | ForEach-Object {
+        if ($_.Value -is [System.Management.Automation.SwitchParameter]) {
+            if ($_.Value.IsPresent) { "-$($_.Key)" }
+        }
+        else {
+            "-$($_.Key) '$($_.Value)'"
+        }
+    }
+    $allParams = $boundParams -join ' '
+    $command = "& '$PSCommandPath' $allParams"
+    powershell -Version 5 -Command $command
     exit
 }
 
@@ -166,47 +177,56 @@ Import-Module "$pathToScript\IntuneFirewallMigration\Private\Strings.ps1" -Force
 #region intro
 Write-Host "`nIntuneFirewallMigration - Migrate Group Policy applied Windows firewall rules to Microsoft Intune." -ForegroundColor Green
 Write-Host "`nNick Benton - oddsandendpoints.co.uk" -NoNewline;
-Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.5 Public Preview' -ForegroundColor Yellow -NoNewline
-Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-06-12' -ForegroundColor Magenta
+Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.6 Public Preview' -ForegroundColor Yellow -NoNewline
+Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-06-15' -ForegroundColor Magenta
 Write-Host "`nIf you have any feedback, open an issue at https://github.com/ennnbeee/IntuneFirewallMigration/issues" -ForegroundColor Cyan
 #endregion
 
 #region authentication
-if (Get-MgContext) {
-    Write-Host 'Disconnecting from existing Graph session.' -ForegroundColor Cyan
-    Disconnect-MgGraph
-}
-
-##scopes required for the script
 $requiredScopes = @('DeviceManagementConfiguration.ReadWrite.All')
 [String[]]$scopes = $requiredScopes -join ', '
 
-## authentication
+#region app auth
 try {
-    if (!$tenantId) {
-        Write-Host 'Connecting using interactive authentication' -ForegroundColor Yellow
-        Connect-MgGraph -Scopes $scopes -NoWelcome -ErrorAction Stop
+    if (Get-MgContext) {
+        Write-Host 'Existing Graph session detected: trying to use current authentication context.' -ForegroundColor cyan
+        try {
+            Invoke-MgGraphRequest -Uri "https://graph.microsoft.com/beta/$graphTestEndpoint" -Method Get -ErrorAction Stop | Out-Null
+            $authOk = $true
+        }
+        catch {
+            $authOk = $false
+        }
+    }
+    if ($authOk -eq $true) {
+        Write-Host 'Existing Graph session detected: using current authentication context.' -ForegroundColor green
     }
     else {
-        if ((!$appId -and !$appSecret) -or ($appId -and !$appSecret) -or (!$appId -and $appSecret)) {
-            Write-Host 'Missing App Details, connecting using user authentication' -ForegroundColor Yellow
-            Connect-ToGraph -tenantId $tenantId -Scopes $scopes -ErrorAction Stop
+        if (!$tenantId) {
+            Write-Host 'Connecting using interactive authentication' -ForegroundColor Yellow
+            Connect-MgGraph -Scopes $scopes -NoWelcome -ErrorAction Stop
         }
         else {
-            Write-Host 'Connecting using App authentication' -ForegroundColor Yellow
-            Connect-ToGraph -tenantId $tenantId -appId $appId -appSecret $appSecret -ErrorAction Stop
+            if ((!$appId -and !$appSecret) -or ($appId -and !$appSecret) -or (!$appId -and $appSecret)) {
+                Write-Host 'Missing App Details, connecting using user authentication' -ForegroundColor Yellow
+                Connect-ToGraph -tenantId $tenantId -Scopes $scopes -ErrorAction Stop
+            }
+            else {
+                Write-Host 'Connecting using App authentication' -ForegroundColor Yellow
+                Connect-ToGraph -tenantId $tenantId -appId $appId -appSecret $appSecret -ErrorAction Stop
+            }
         }
     }
     $context = Get-MgContext
-    Write-Host "`nSuccessfully connected to Microsoft Graph Tenant ID $($context.TenantId)." -ForegroundColor Green
+    Write-Host "`nSuccessfully connected to Microsoft Graph tenant $($context.TenantId)." -ForegroundColor Green
 }
 catch {
     Write-Error $_.Exception.Message
     exit
 }
+#endregion
 
 $currentScopes = $context.Scopes
-## Validate required permissions
 $missingScopes = $requiredScopes | Where-Object { $_ -notin $currentScopes }
 if ($missingScopes.Count -gt 0) {
     Write-Host 'WARNING: The following scope permissions are missing:' -ForegroundColor Red
@@ -221,50 +241,6 @@ else {
 
 #region script
 try {
-    if ($legacyProfile) {
-        $uri = 'https://graph.microsoft.com/beta/deviceManagement/intents?$filter=templateId%20eq%20%274b219836-f2b1-46c6-954d-4cd2f4128676%27%20or%20templateId%20eq%20%274356d05c-a4ab-4a07-9ece-739f7c792910%27%20or%20templateId%20eq%20%275340aa10-47a8-4e67-893f-690984e4d5da%27'
-    }
-    else {
-        $uri = 'https://graph.microsoft.com/beta/deviceManagement/configurationPolicies?$filter=technologies has ''microsoftSense'''
-    }
-    $graphResults = Invoke-MgGraphRequest -Method GET -Uri $uri -OutputType PSObject
-    $results = @()
-    $results += $graphResults.value
-    $pages = $graphResults.'@odata.nextLink'
-    while ($null -ne $pages) {
-        $additional = Invoke-MgGraphRequest -Uri $pages -Method Get -OutputType PSObject
-        if ($pages) {
-            $pages = $additional.'@odata.nextLink'
-        }
-        $results += $additional.value
-    }
-    $profiles = $results | Where-Object { $_.templateReference.templateDisplayName -eq 'Windows Firewall Rules' }
-    $profileNameExist = $true
-    while ($profileNameExist) {
-        if (![string]::IsNullOrEmpty($profiles)) {
-            foreach ($display in $profiles) {
-                if ($legacyProfile) {
-                    $name = $display.displayName.Split('-')
-                }
-                else {
-                    $name = $display.name.Split('-')
-                }
-                $profileNameExist = $false
-                if ($name[0] -eq $profileName) {
-                    $profileNameExist = $true
-                    $profileName = Read-Host -Prompt $Strings.ProfileExists
-                    while (-not($profileName)) {
-                        $profileName = Read-Host -Prompt $Strings.ProfileCannotBeBlank
-                    }
-                    break
-                }
-            }
-        }
-        else {
-            $profileNameExist = $false
-        }
-    }
-
     $EnabledOnly = $true
     if ($includeDisabledRules) {
         $EnabledOnly = $false

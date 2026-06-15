@@ -7,7 +7,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule      = 'FirewallRuleMigration.psm1'
+    RootModule      = 'IntuneFirewallRuleMigration.psm1'
 
     # Version number of this module.
     ModuleVersion   = '0.3'
@@ -28,7 +28,7 @@
     Description     = 'PowerShell cmdlet suite to support automation of migrating Windows firewall rules to Microsoft Intune'
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules = @('Microsoft.Graph.Authentication', 'ImportExcel')
+    RequiredModules = @('Microsoft.Graph.Authentication', 'ImportExcel', 'NetSecurity', 'Appx')
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
