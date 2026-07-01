@@ -32,7 +32,7 @@ function Get-FirewallDisplayName {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -40,7 +40,7 @@ function Get-FirewallDisplayName {
     # replaces '/' and '|' as '_'; Intune does not allow '/' or '|' in display names
     $formattedDisplayName = $firewallObject.displayName -replace '/|\|', '_'
     # Intune sets a hard limit of 200 characters for display name lengths
-    If ($firewallObject.displayName.Length -gt $displayNameLengthLimit) {
+    if ($firewallObject.displayName.Length -gt $displayNameLengthLimit) {
         $errorTitle = $Strings.FirewallRuleDisplayNameTooLongTitle
         $errorMessage = $Strings.FirewallRuleDisplayNameTooLongMessage `
             -f $firewallObject.DisplayName, $firewallObject.displayName.subString(0, $displayNameLengthLimit)
@@ -56,10 +56,10 @@ function Get-FirewallDisplayName {
             -defaultOption 0
 
         # Choice is the index of the option
-        Switch ($choice) {
+        switch ($choice) {
             # replaces '/' and '|' as '_'
             0 { return $formattedDisplayName.subString(0, $displayNameLengthLimit) }
-            1 { Throw [ExportFirewallRuleException]::New($Strings.FirewallRuleDisplayNameException, $Strings.FirewallRuleDisplayName) }
+            1 { throw [ExportFirewallRuleException]::New($Strings.FirewallRuleDisplayNameException, $Strings.FirewallRuleDisplayName) }
             2 { return Read-Host -Prompt $Strings.FirewallRuleDisplayNameRenamePrompt }
         }
     }
@@ -69,17 +69,17 @@ function Get-FirewallDisplayName {
 # Due to the way package family names are stored in Windows, there is some preprocessing that has to
 # be done to avoid linear time lookups for the package family name.
 $packageFullNameToFamilyName = @{ }
-ForEach ($appPackage in Get-AppxPackage -AllUsers) {
+foreach ($appPackage in Get-AppxPackage -AllUsers) {
     $packageFullNameToFamilyName.Set_Item($appPackage.PackageFullName, $appPackage.PackageFamilyName)
 }
 
 $packageSidLookup = @{ }
 # Package family names are represented internally as package SIDs (Security Identifiers), which are not accepted by Intune.
 # These SIDs can be translated by digging into the registry at the provided location
-ForEach ($registryItem in Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\SecurityManager\CapAuthz\ApplicationsEx) {
+foreach ($registryItem in Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\SecurityManager\CapAuthz\ApplicationsEx) {
     $packageFullName = $registryItem.Name -replace '^HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SecurityManager\\CapAuthz\\ApplicationsEx\\', ''
     $packageSid = $registryItem.GetValue('PackageSid')
-    If ($packageFullNameToFamilyName.ContainsKey($packageFullName)) {
+    if ($packageFullNameToFamilyName.ContainsKey($packageFullName)) {
         $packageSidLookup.Set_Item($packageSid, $packageFullNameToFamilyName[$packageFullName])
     }
 }
@@ -97,19 +97,19 @@ function Get-FirewallPackageFamilyName {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
     $appFilterInstance = Get-NetFirewallApplicationFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    If (-not $appFilterInstance.Package) {
+    if (-not $appFilterInstance.Package) {
         return $null
     }
 
     # In scenarios where a package security identifier was found, but did not exist when we created the hash table,
     # user interaction is required.
-    If ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
-        Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
+    if ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
+        throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
 
     }
     return $packageSidLookup[$appFilterInstance.Package]
@@ -127,12 +127,12 @@ function Get-FirewallFilePath {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
     $appFilterInstance = Get-NetFirewallApplicationFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    If ($appFilterInstance.Program -eq $Strings.Any ) {
+    if ($appFilterInstance.Program -eq $Strings.Any ) {
         return $null
     }
     return $appFilterInstance.Program
@@ -150,12 +150,12 @@ function Get-FirewallServiceName {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
-    $serviceFilter = Get-NetFirewallServiceFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    If ($serviceFilter.Service -eq $Strings.Any) {
+    $serviceFilter = Get-NetFirewallServiceFilterWrapper -AssociatedNetFirewallRule $firewallObject -ErrorAction Stop
+    if ($serviceFilter.Service -eq $Strings.Any) {
         return $null
     }
     return $serviceFilter.Service
@@ -176,7 +176,7 @@ function Get-FirewallProtocol {
     # Values for the string mapped port values can be found here:
     # https://docs.microsoft.com/en-us/powershell/module/netsecurity/set-netfirewallrule?view=win10-ps
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -184,7 +184,7 @@ function Get-FirewallProtocol {
 
     # The behaviour of the Get-NetFirewallPortFilter cmdlet is to return the string name of the protocol for these
     # specific protocols, everything else is a number
-    Switch ($portFilterInstance.Protocol) {
+    switch ($portFilterInstance.Protocol) {
         'TCP' { return 6 }
         'UDP' { return 17 }
         'ICMPv4' { return 1 }
@@ -192,11 +192,11 @@ function Get-FirewallProtocol {
         # the default 'All' value in graph is interpreted as a null argument for the protocol
         $Strings.Any { return $null }
         default {
-            Try {
+            try {
                 return [int]$portFilterInstance.Protocol
             }
-            Catch {
-                Throw [ExportFirewallRuleException]::new($Strings.FirewallRuleProtocolException -f $_, $Strings.FirewallRuleProtocol)
+            catch {
+                throw [ExportFirewallRuleException]::new($Strings.FirewallRuleProtocolException -f $_, $Strings.FirewallRuleProtocol)
             }
         }
     }
@@ -214,7 +214,7 @@ function Get-FirewallLocalPortRange {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -235,7 +235,7 @@ function Get-FirewallRemotePortRange {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -256,7 +256,7 @@ function Get-FirewallPortRangeHelper {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [AllowNull()]
         $portInstance,
@@ -268,20 +268,20 @@ function Get-FirewallPortRangeHelper {
         $protocol
     )
 
-    If ($null -eq $portInstance) {
+    if ($null -eq $portInstance) {
         return $null
     }
-    If ($portInstance -is [String]) {
+    if ($portInstance -is [String]) {
         return Get-FirewallPortRangeMapping -port $portInstance -exportType $exportType -protocol $protocol
     }
-    If ($portInstance -is [Array]) {
+    if ($portInstance -is [Array]) {
         $portArray = @()
-        ForEach ($instance in $portInstance) {
+        foreach ($instance in $portInstance) {
             $portArray += Get-FirewallPortRangeMapping $instance -exportType $exportType -protocol $protocol
         }
         return $portArray
     }
-    Throw [ExportFirewallRuleException]::new($($Strings.FirewallRulePortException -f $portInstance.GetType().FullName), `
+    throw [ExportFirewallRuleException]::new($($Strings.FirewallRulePortException -f $portInstance.GetType().FullName), `
             $exportType)
 }
 
@@ -300,7 +300,7 @@ function Get-FirewallPortRangeMapping {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [string]
@@ -315,19 +315,19 @@ function Get-FirewallPortRangeMapping {
     # only rules using TCP and UDP protocol can have port numbers on intune
     # https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     if ($protocol -eq 'TCP' -or $protocol -eq 'UDP') {
-        If ($port -eq '') {
+        if ($port -eq '') {
             return $null
         }
         # We interpret "Any" to be an empty array, with no restrictions on the ports
-        If ($port -eq $Strings.Any) {
+        if ($port -eq $Strings.Any) {
             return , @()
         }
         # Ports that match "xxx", where x is a digit, are acceptable
-        If ($port -match '^\d+$') {
+        if ($port -match '^\d+$') {
             return $port
         }
         # Ports that match a string containing "xxx-xxx", where x is a digit, are acceptable
-        If ($port -match '^\d+-\d+$') {
+        if ($port -match '^\d+-\d+$') {
             return $port
         }
         # Ports that match RPC-EPMAP are assigned a default port of 135
@@ -352,7 +352,7 @@ function Get-FirewallPortRangeMapping {
     }
 
     # Any other type of strings may also be encountered that may not be supported by Graph
-    Throw [ExportFirewallRuleException]::new($($Strings.FirewallRulePortRangeException -f $port), $exportType)
+    throw [ExportFirewallRuleException]::new($($Strings.FirewallRulePortRangeException -f $port), $exportType)
 }
 
 function Get-FirewallLocalAddressRange {
@@ -369,7 +369,7 @@ function Get-FirewallLocalAddressRange {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -391,7 +391,7 @@ function Get-FirewallRemoteAddressRange {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -417,7 +417,7 @@ function Get-useAnyRemoteAddressRangeOption {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -444,7 +444,7 @@ function Get-useAnyLocalAddressRangeOption {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
@@ -485,7 +485,7 @@ function Test-FirewallRemoteAddressRange {
     https://docs.microsoft.com/en-us/windows/client-management/mdm/firewall-csp
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $addressRange
     )
@@ -508,7 +508,7 @@ function Test-FirewallRemoteAddressRange {
 
                 }
                 catch {
-                    Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange)
+                    throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange)
 
 
                 }
@@ -538,7 +538,7 @@ function Test-FirewallRemoteAddressRange {
                         $result = $addressArray[0] -match [IpAddress]$addressArray[0]
                     }
                     catch {
-                        Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange)
+                        throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange)
 
                     }
                     if ($result) {
@@ -566,16 +566,16 @@ function Get-FirewallAddressRange {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $addressRange
     )
 
     # We perform minimal checking for addresses because of the extensive validation done in the graph,
     # but this may be subject to later changes if errors are frequently encountered
-    Switch ($addressRange) {
+    switch ($addressRange) {
         $Strings.Any { return $null }
-        'PlayToDevice' { Throw [ExportFirewallRuleException]::new($Strings.FirewallRuleAddressRangePlayToDeviceException, $Strings.FirewallRuleAddressRange) }
+        'PlayToDevice' { throw [ExportFirewallRuleException]::new($Strings.FirewallRuleAddressRangePlayToDeviceException, $Strings.FirewallRuleAddressRange) }
         default { return $addressRange }
     }
 }
@@ -598,14 +598,14 @@ function Get-FirewallProfileTypeDC {
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrulenetworkprofiletypes?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [uint16]
         $profileTypes
     )
     # The resulting profile types are a bitmap of values. We can represent
     # these combinations as strings for Intune
-    Switch ($profileTypes) {
+    switch ($profileTypes) {
         # "Any" is interpreted as 0 according to the first link, but we can set the default
         # to be "All" by omitting any value in the attribute
         0 { return $null }
@@ -616,7 +616,7 @@ function Get-FirewallProfileTypeDC {
         5 { return 'domain, public' }
         6 { return 'private, public' }
         7 { return 'domain, private, public' }
-        default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
+        default { throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
     }
 }
 
@@ -639,14 +639,14 @@ function Get-FirewallProfileType {
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrulenetworkprofiletypes?view=graph-rest-beta
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [uint16]
         $profileTypes
     )
     # The resulting profile types are a bitmap of values. We can represent
     # these combinations as strings for Intune
-    Switch ($profileTypes) {
+    switch ($profileTypes) {
         # "Any" is interpreted as 0 according to the first link, but we can set the default
         # to be "All" by omitting any value in the attribute
         0 { return @('notConfigured') }
@@ -657,7 +657,7 @@ function Get-FirewallProfileType {
         5 { return @('domain', 'public') }
         6 { return @('private', 'public') }
         7 { return @('domain', 'private', 'public') }
-        default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
+        default { throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
     }
 }
 
@@ -675,17 +675,17 @@ function Get-FirewallAction {
     .LINK
     https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/jj676843(v=vs.85)#properties
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [uint16]
         $action
     )
-    Switch ($action) {
+    switch ($action) {
         2 { return 'allowed' }
         # The reference suggests that AllowByPass is a known and expected value, which is not supported by Intune
-        3 { Throw [ExportFirewallRuleException]::new($Strings.FirewallRuleActionAllowBypassException, $Strings.FirewallRuleAction) }
+        3 { throw [ExportFirewallRuleException]::new($Strings.FirewallRuleActionAllowBypassException, $Strings.FirewallRuleAction) }
         4 { return 'blocked' }
-        default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleActionException -f $action), $Strings.FirewallRuleAction) }
+        default { throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleActionException -f $action), $Strings.FirewallRuleAction) }
     }
 }
 
@@ -704,16 +704,16 @@ function Get-FirewallDirection {
     .LINK
     https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/jj676843(v=vs.85)#properties
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [uint16]
         $direction
     )
     # The values found here are in the link provided
-    Switch ($direction) {
+    switch ($direction) {
         1 { return 'in' }
         2 { return 'out' }
-        default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleDirectionException -f $direction), $Strings.FirewallRuleDirection) }
+        default { throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleDirectionException -f $direction), $Strings.FirewallRuleDirection) }
     }
 }
 
@@ -729,13 +729,13 @@ function Get-FirewallLocalUserAuthorization {
     .OUTPUTS
     String
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
 
     $securityFilter = Get-NetFirewallSecurityFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    Switch ($securityFilter.LocalUser) {
+    switch ($securityFilter.LocalUser) {
         $Strings.Any { return $null }
         default { return $securityFilter.LocalUser }
     }
@@ -755,18 +755,18 @@ function Get-FirewallInterfaceType {
     .LINK
     http://wutils.com/wmi/root/standardcimv2/msft_netinterfacetypefilter/#interfacetype_properties
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
     $interfaceType = Get-NetFirewallInterfaceTypeFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    Switch ($interfaceType.InterfaceType) {
+    switch ($interfaceType.InterfaceType) {
         $Strings.Any { return @('notConfigured') }
         'LocalAccess' { return @() }
         'WirelessAccess' { return @('wireless') }
         'RemoteAccess' { return @('remoteAccess') }
         default {
-            Throw [ExportFirewallRuleException]::new($Strings.FirewallRuleInterfaceTypeException -f $interfaceType.InterfaceType, `
+            throw [ExportFirewallRuleException]::new($Strings.FirewallRuleInterfaceTypeException -f $interfaceType.InterfaceType, `
                     $Strings.FirewallRuleInterfaceType)
         }
     }
@@ -786,25 +786,25 @@ function Get-FirewallEdgeTraversalPolicy {
     .LINK
     https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/jj676843(v=vs.85)#properties
     #>
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $firewallObject
     )
     # The values found here are in the link provided
     $direction = Get-FirewallDirection $firewallObject.Direction
     # Edge traversal policies are only recognized by the Graph if they are inbound
-    If ($direction -eq 'in') {
-        If ($firewallObject.EdgeTraversalPolicy -eq 0) {
+    if ($direction -eq 'in') {
+        if ($firewallObject.EdgeTraversalPolicy -eq 0) {
             return 'blocked'
         }
-        If ($firewallObject.EdgeTraversalPolicy -eq 1) {
+        if ($firewallObject.EdgeTraversalPolicy -eq 1) {
             return 'allowed'
         }
     }
-    ElseIf ($direction -eq 'out' -and $firewallObject.EdgeTraversalPolicy -eq 0) {
+    elseif ($direction -eq 'out' -and $firewallObject.EdgeTraversalPolicy -eq 0) {
         return $null
     }
-    Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleEdgeTraversalException -f ($direction, $firewallObject.EdgeTraversalPolicy)), `
+    throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleEdgeTraversalException -f ($direction, $firewallObject.EdgeTraversalPolicy)), `
             $Strings.FirewallRuleEdgeTraversal)
 }
 
@@ -816,49 +816,80 @@ function Get-FirewallEdgeTraversalPolicy {
 # You can determine this by running New-MockObject -Type Microsoft.Management.Infrastructure.CimInstance#root\StandardCimv2\MSFT_NetFirewallRule
 
 function Get-NetFirewallAddressFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule -ErrorAction Stop
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
 }
 
 function Get-NetFirewallApplicationFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallApplicationFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallApplicationFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule -ErrorAction stop
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
 }
 
 function Get-NetFirewallInterfaceTypeFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallInterfaceTypeFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallInterfaceTypeFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
+
 }
 
 function Get-NetFirewallPortFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallPortFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallPortFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule -ErrorAction Stop
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
 }
 
 function Get-NetFirewallSecurityFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallSecurityFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallSecurityFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule -ErrorAction Stop
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
 }
 
 function Get-NetFirewallServiceFilterWrapper {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         $AssociatedNetFirewallRule
     )
-    return Get-NetFirewallServiceFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule
+    try {
+        return Get-NetFirewallServiceFilter -AssociatedNetFirewallRule $AssociatedNetFirewallRule -ErrorAction Stop
+    }
+    catch {
+        Write-Host 'Ignorable Error: Review RuleError Excel file in the logs folder.' -ForegroundColor Yellow
+    }
 }

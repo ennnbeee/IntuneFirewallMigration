@@ -1,7 +1,7 @@
 #Requires -Version 5
 <#PSScriptInfo
 
-.VERSION 0.4.6
+.VERSION 0.4.7
 .GUID 4636d9c0-8d62-46f6-83a6-dfd1312e1681
 .AUTHOR Nick Benton
 .COMPANYNAME odds+endpoints
@@ -14,6 +14,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+v0.4.7 - Better error handling
 v0.4.6 - Included module dependencies in PSScriptInfo
 v0.4.5 - Resolved issues with modules loading
 v0.4.3 - Minor changes
@@ -177,8 +178,8 @@ Import-Module "$pathToScript\IntuneFirewallMigration\Private\Strings.ps1" -Force
 #region intro
 Write-Host "`nIntuneFirewallMigration - Migrate Group Policy applied Windows firewall rules to Microsoft Intune." -ForegroundColor Green
 Write-Host "`nNick Benton - oddsandendpoints.co.uk" -NoNewline;
-Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.6 Public Preview' -ForegroundColor Yellow -NoNewline
-Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-06-15' -ForegroundColor Magenta
+Write-Host ' | Version' -NoNewline; Write-Host ' 0.4.7 Public Preview' -ForegroundColor Yellow -NoNewline
+Write-Host ' | Last updated: ' -NoNewline; Write-Host '2026-07-01' -ForegroundColor Magenta
 Write-Host "`nIf you have any feedback, open an issue at https://github.com/ennnbeee/IntuneFirewallMigration/issues" -ForegroundColor Cyan
 #endregion
 
